@@ -15,3 +15,5 @@ Dealing with knee pain has made me more aware of how critical proper cadence is 
 As a student with limited time, money and resources, I decided to share my work with the community and shift focus to adapting it for the Swift Student Challenge. My hope is that it might not only inspire others, but perhaps open a door for me too - like publishing the app eventually.
 
 Thanks for stopping and having a look.
+
+**Note:** This project will be submitted to Swift Student Challenge. Please do not reuse or submit this code as your own.
