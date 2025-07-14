@@ -5,7 +5,3 @@ Finding the right pace in cycling and running can be hard for many since human b
 * Live statistics are displayed in the app. A live activity is launched so that you can easily glance over the accurate measure of cadence in the last minute on the lock screen or on your Apple Watch.
 * Stop the workout to see the summary. You can also view history summaries in Fitness app.
 
-<img width="828" height="1792" alt="IMG_0142" src="https://github.com/user-attachments/assets/c40881f5-d24b-470b-ab94-805a8e0f1a22" />
-<img width="828" height="1792" alt="IMG_0144" src="https://github.com/user-attachments/assets/d5da175b-ef94-442f-8960-d66cd9872cd3" />
-<img width="828" height="1792" alt="IMG_0145" src="https://github.com/user-attachments/assets/2e533269-5ca3-4f53-b4c0-287bd313853d" />
-<img width="828" height="1792" alt="IMG_0143" src="https://github.com/user-attachments/assets/d7269f75-0ac9-4b46-9e4a-3ab19e70979a" />
