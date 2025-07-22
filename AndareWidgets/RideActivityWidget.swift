@@ -12,17 +12,8 @@ import ActivityKit
 struct RideActivityWidget: Widget {
     @ViewBuilder
     private func workoutIcon(for workoutType: WorkoutType) -> some View {
-        switch workoutType {
-        case .cycling:
-            Image(systemName: "bicycle")
-                .foregroundStyle(.accent)
-        case .walking:
-            Image(systemName: "figure.walk")
-                .foregroundStyle(.accent)
-        case .running:
-            Image(systemName: "figure.run")
-                .foregroundStyle(.accent)
-        }
+        Image(systemName: workoutType.sfSymbolName)
+            .foregroundStyle(.accent)
     }
     
     @ViewBuilder
@@ -96,7 +87,6 @@ struct RideActivityWidget: Widget {
                 }
                 
                 DynamicIslandExpandedRegion(.bottom) {
-                    // Display the live cadence here
                     HStack {
                         if let cadence = context.state.preferredCadence {
                             HStack(alignment: .lastTextBaseline, spacing: 2) {
@@ -128,9 +118,21 @@ struct RideActivityWidget: Widget {
                     
             } compactTrailing: {
                 // MARK: Compact UI (trailing/right side)
-                timerView(for: context.state.rideStartDate)
-                    .font(.caption.monospacedDigit())
-                    .frame(width: 45)
+                if let cadence = context.state.preferredCadence {
+                    HStack(alignment: .lastTextBaseline, spacing: 1) {
+                        Text(String(Int(cadence.rounded())))
+                            .font(.body.weight(.semibold).monospacedDigit())
+                        Text("RPM")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .padding(.leading, -2)
+                    }
+                    .frame(width: 60)
+                } else {
+                    timerView(for: context.state.rideStartDate)
+                        .font(.caption.monospacedDigit())
+                        .frame(width: 45)
+                }
                 
             } minimal: {
                 // MARK: Minimal UI (when multiple activities are active)

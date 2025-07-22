@@ -68,7 +68,7 @@ struct RecentWorkoutsView: View {
     
     private var workoutsHeaderTitle: String {
         if isExpanded {
-            return "Workouts (Last 7 Days)"
+            return "This Week's Workouts"
         } else {
             // collapsed
             if todaysWorkouts.count >= 3 {
@@ -139,14 +139,15 @@ struct RecentWorkoutsView: View {
                             isExpanded = true
                         }
                     }
-                    .buttonStyle(.bordered)
+                    .fontWeight(.semibold)
+                    .contentShape(Rectangle())
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }
         }
         .padding(.horizontal)
         .sheet(item: $selectedWorkoutData) { data in
-            SummaryView(data: data)
+            WorkoutSummaryView(data: data)
         }
         .alert(
             "Delete Workout Data",

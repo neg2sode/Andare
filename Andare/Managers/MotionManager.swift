@@ -61,6 +61,12 @@ final class MotionManager {
         operationQueue.maxConcurrentOperationCount = 1
         motionManager.gyroUpdateInterval = MotionManager.UPDATE_INTERVAL
     }
+    
+    func configure(for newType: WorkoutType) {
+        let cadenceRange = newType.getInfo().range
+        self.minCadenceFreq = cadenceRange.min / 60.0
+        self.maxCadenceFreq = cadenceRange.max / 60.0
+    }
 
     func startUpdates() {
         guard motionManager.isGyroAvailable else { return }

@@ -12,12 +12,13 @@ struct DrawerView: View {
     @State private var workoutsExpanded = false
     
     @EnvironmentObject var drawerState: DrawerState
+    @EnvironmentObject var pagingState: WorkoutPagingState
 
     var body: some View {
         VStack(spacing: 0) {
             // MARK: - Drawer Header
             HStack {
-                Text("Andare Dev v1.7.1b")
+                Text("Andare Dev v1.7.2")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
@@ -57,11 +58,22 @@ struct DrawerView: View {
             }
             
             // MARK: - Footnote
-            Text("Made with ☕️ by neg2sode")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
+            if drawerState.selectedDetent == .large {
+                Text("Made with ☕️ by neg2sode")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 8)
+                    .transition(.opacity.animation(.easeInOut))
+            } else {
+                PageIndicatorView(
+                    numberOfPages: pagingState.allWorkoutTypes.count,
+                    currentPage: pagingState.allWorkoutTypes.firstIndex(of: pagingState.selectedWorkoutType) ?? 0
+                )
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.top, 8)
+                .padding(.vertical, 8)
+                .transition(.opacity.animation(.easeInOut))
+            }
         }
         .background(Color(.systemBackground))
         .sheet(isPresented: $isShowingPreferences) {

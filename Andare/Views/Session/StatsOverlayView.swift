@@ -23,7 +23,7 @@ struct OverlayStatsBlock: View {
                     .contentTransition(.numericText())
                     .animation(.snappy, value: valueToAnimate) // Apply animation
                 Text(stats.unit)
-                    .font(.system(size: 30, weight: .medium))
+                    .font(.system(size: 30, weight: .medium, design: .rounded))
                     .foregroundStyle(stats.colour) // Apply color from FormattedStats
             }
             

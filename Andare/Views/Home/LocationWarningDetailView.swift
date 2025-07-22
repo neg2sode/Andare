@@ -53,7 +53,7 @@ struct LocationWarningDetailView: View {
                         }
 
                         // Learn More link
-                        Link("Learn More", destination: URL(string: "https://andare.app/help/location")!)
+                        Link("Learn More", destination: URL(string: "https://google.com")!)
                             .font(.callout)
                             .foregroundStyle(Color.accentColor)
 

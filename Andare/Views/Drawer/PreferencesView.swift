@@ -59,6 +59,7 @@ struct PreferencesView: View {
                             }
                         }
                     }
+                    .buttonStyle(.plain)
                     // Present LocationWarningDetailView if needed
                     .sheet(isPresented: $showingLocationWarningDetail) {
                         LocationWarningDetailView()
@@ -94,6 +95,7 @@ struct PreferencesView: View {
                             }
                         }
                     }
+                    .buttonStyle(.plain)
                 }
                 // ─────────────────────────────────────────────────────────────────
 

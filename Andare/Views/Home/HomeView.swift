@@ -11,10 +11,11 @@ import Combine
 import SwiftData
 
 struct HomeView: View {
-    @StateObject private var rideSessionManager = RideSessionManager(workoutType: .cycling)
+    @StateObject private var rideSessionManager: RideSessionManager
+    @StateObject private var drawerState = DrawerState()
+    @StateObject private var pagingState: WorkoutPagingState
     @StateObject private var healthKitManager = HealthKitManager()
     @StateObject private var alertManager = AlertManager()
-    @StateObject private var drawerState = DrawerState()
     
     @State private var isDrawerPresented = false
     @State private var isShowingLocationWarning = false
@@ -64,6 +65,16 @@ struct HomeView: View {
             }
         )
     }
+    
+    init() {
+        let pagingState = WorkoutPagingState()
+        let rideManager = RideSessionManager(workoutType: pagingState.selectedWorkoutType)
+        
+        self._pagingState = StateObject(wrappedValue: pagingState)
+        self._rideSessionManager = StateObject(wrappedValue: rideManager)
+    }
+    
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
@@ -91,6 +102,7 @@ struct HomeView: View {
             .drawerSheet(isPresented: $isDrawerPresented, drawerState: drawerState) {
                 DrawerView()
                     .environmentObject(drawerState)
+                    .environmentObject(pagingState)
                     .modelContainer(for: [WorkoutDataModel.self, CadenceSegmentModel.self])
             }
             .onAppear {
@@ -110,7 +122,7 @@ struct HomeView: View {
                 // transition to the .idle state and unlock the UI
                 rideState = .idle
             }) { summaryData in
-                SummaryView(data: summaryData)
+                WorkoutSummaryView(data: summaryData)
             }
             .onChange(of: rideSessionManager.locationAuthStatus) { oldStatus, newStatus in
                 // This handles starting the ride automatically after location permissions are granted.
@@ -124,6 +136,9 @@ struct HomeView: View {
                         break
                     }
                 }
+            }
+            .onChange(of: pagingState.selectedWorkoutType) { _, newType in
+                rideSessionManager.configure(for: newType)
             }
             .alert(alertManager.title, isPresented: $alertManager.isPresenting) {
                 if alertManager.showSettingsButton {
@@ -141,22 +156,11 @@ struct HomeView: View {
     // MARK: - Subviews for Clarity
     
     private var idleView: some View {
-        VStack {
-            Spacer()
-            Button(action: startRideSequence) {
-                ZStack {
-                    Circle()
-                        .fill(Color.accent)
-                        .frame(width: 180, height: 180)
-                        .shadow(radius: 10)
-
-                    Text("Start\nRide")
-                        .font(.title2.weight(.bold))
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.white)
-                }
-            }
-            Spacer()
+        PagingCarousel(selection: $pagingState.selectedWorkoutType, pages: pagingState.allWorkoutTypes) { workoutType in
+            StartWorkoutButtonView(
+                workoutType: workoutType,
+                action: startRideSequence
+            )
         }
     }
     
@@ -272,7 +276,7 @@ struct HomeView: View {
                         return
                     }
                     
-                    let locationStatus = rideSessionManager.locationManager.authorisationStatus
+                    let locationStatus = rideSessionManager.locationAuthStatus
                     
                     switch locationStatus {
                     case .authorizedWhenInUse, .authorizedAlways, .denied, .restricted:

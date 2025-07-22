@@ -30,7 +30,7 @@ struct FullMapView: View {
     var body: some View {
         NavigationView {
             Map(position: $localMapCameraPosition, interactionModes: .all) {
-                SummaryView.routeMapContent(polyline: routePolyline, start: start, end: end)
+                WorkoutSummaryView.routeMapContent(polyline: routePolyline, start: start, end: end)
             }
             .mapControlVisibility(.automatic)
             .navigationTitle(formattedTitle)

@@ -8,6 +8,28 @@
 	<array>
 		<dict>
 			<key>Type</key>
+			<string>PSMultiValueSpecifier</string>
+			<key>Title</key>
+			<string>Preferred Workout Type</string>
+			<key>Key</key>
+			<string>preferredWorkoutType</string>
+			<key>DefaultValue</key>
+			<string>cycling</string>
+			<key>Titles</key>
+			<array>
+				<string>Outdoor Cycle</string>
+				<string>Outdoor Run</string>
+				<string>Outdoor Walk</string>
+			</array>
+			<key>Values</key>
+			<array>
+				<string>cycling</string>
+				<string>running</string>
+				<string>walking</string>
+			</array>
+		</dict>
+		<dict>
+			<key>Type</key>
 			<string>PSGroupSpecifier</string>
 			<key>FooterText</key>
 			<string>If disabled, the warning about potentially unreliable background tracking is not displayed on the app screen.</string>

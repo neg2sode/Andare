@@ -35,7 +35,7 @@ final class RideSessionManager: ObservableObject {
     var motionManager: MotionManager
     let healthStore = HKHealthStore()
     let locationManager = LocationManager()
-    let workoutType: WorkoutType
+    private(set) var workoutType: WorkoutType
     
     // --- Published State for UI ---
     @Published var totalDistance: Double = 0.0
@@ -85,6 +85,14 @@ final class RideSessionManager: ObservableObject {
         self.motionManager = MotionManager(workoutType: workoutType)
         self.subscribeToLocationManagerUpdates()
         self.locationAuthStatus = locationManager.authorisationStatus
+    }
+    
+    func configure(for newType: WorkoutType) {
+        guard self.workoutType != newType else { return }
+        
+        self.workoutType = newType
+        self.motionManager.configure(for: newType)
+        self.resetSessionState()
     }
     
     // Helper function to add logs safely
@@ -274,11 +282,11 @@ final class RideSessionManager: ObservableObject {
                     
                     counter.split += 1
                     if counter.split >= maxSplitCount {
-                        if true {
+                        if workoutType == .cycling {
                             await counter.judgeNotificationA()
                         }
                         
-                        if locationAuthStatus == .authorizedAlways || locationAuthStatus == .authorizedWhenInUse {
+                        if workoutType == .cycling && locationAuthStatus == .authorizedAlways || locationAuthStatus == .authorizedWhenInUse {
                             await counter.judgeNotificationB()
                         }
                         

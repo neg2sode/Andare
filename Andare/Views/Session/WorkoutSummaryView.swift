@@ -1,5 +1,5 @@
 //
-//  SummaryView.swift
+//  WorkoutSummaryView.swift
 //  Andare
 //
 //  Created by neg2sode on 2025/5/1.
@@ -25,7 +25,7 @@ struct LegendItem: View {
     }
 }
 
-struct SummaryView: View {
+struct WorkoutSummaryView: View {
     private let data: WorkoutData
     private let coordinates: [CLLocationCoordinate2D]
     private let routePolyline: MKPolyline?
@@ -146,11 +146,11 @@ struct SummaryView: View {
             Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 12) { // Spacing for grid cells
                 GridRow {
                     statsView(label: "Duration", stats: StatsFormatter.formatDuration(data.duration))
-                    statsView(label: "Distance", stats: StatsFormatter.formatDistance(data.totalDistance))
+                    statsView(label: "Avg. Cadence", stats: StatsFormatter.formatCadence(data.averageCadence))
                 }
                 Divider()
                 GridRow {
-                    statsView(label: "Avg. Cadence", stats: StatsFormatter.formatCadence(data.averageCadence))
+                    statsView(label: "Distance", stats: StatsFormatter.formatDistance(data.totalDistance))
                     statsView(label: "Elevation Gain", stats: StatsFormatter.formatElevation(data.elevationGain))
                 }
                 Divider()
@@ -181,12 +181,12 @@ struct SummaryView: View {
                 .foregroundStyle(.primary)
             HStack(alignment: .lastTextBaseline, spacing: 0) {
                 Text(stats.value)
-                    .font(.system(size: 28, weight: .semibold))
+                    .font(.system(size: 28, weight: .semibold, design: .rounded))
                     .foregroundStyle(stats.colour) // Apply specific color to the value
                     .lineLimit(1) // Ensure the value stays on one line
                     .minimumScaleFactor(0.7) // Allow text to shrink if it's too long to fit
                 Text(stats.unit)
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .foregroundStyle(stats.colour)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
@@ -215,16 +215,16 @@ struct SummaryView: View {
                 }
                 // Apply modifiers directly here:
                 .chartForegroundStyleScale([
-                    CadenceZone.low.rawValue: Color.blue,
-                    CadenceZone.normal.rawValue: Color.green,
-                    CadenceZone.high.rawValue: Color.orange
+                    CadenceZone.low.rawValue: Color.lowCadenceColour,
+                    CadenceZone.normal.rawValue: Color.cadenceColour,
+                    CadenceZone.high.rawValue: Color.highCadenceColour
                 ])
                 .chartLegend(position: .bottom, alignment: .center) {
                     HStack {
-                        LegendItem(colour: .blue, text: CadenceZone.low.rawValue)
-                        LegendItem(colour: .green, text: CadenceZone.normal.rawValue)
-                        LegendItem(colour: .orange, text: CadenceZone.high.rawValue)
-                        LegendItem(colour: .gray, text: CadenceZone.zero.rawValue)
+                        LegendItem(colour: Color.lowCadenceColour, text: CadenceZone.low.rawValue)
+                        LegendItem(colour: Color.cadenceColour, text: CadenceZone.normal.rawValue)
+                        LegendItem(colour: Color.highCadenceColour, text: CadenceZone.high.rawValue)
+                        LegendItem(colour: Color.gray, text: CadenceZone.zero.rawValue)
                     }
                     .padding(.top, 5)
                  }
@@ -379,11 +379,11 @@ struct SummaryView: View {
         RuleMark(y: .value("Average", data.averageCadence))
              .foregroundStyle(.gray)
              .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))
-             .annotation(position: .top, alignment: .leading) {
+             .annotation(position: .top, alignment: .trailing) {
                  Text("Avg.: \(Int(data.averageCadence))")
                      .font(.caption)
                      .foregroundStyle(.gray)
-                     .padding(.leading, 4)
+                     .padding(.trailing, 4)
              }
     }
 }

@@ -87,7 +87,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Assets.xcassets,
-				"Utilities/WorkoutDataModel+Support.swift",
+				Utilities/Enums.swift,
 			);
 			target = 46FB749B2E01CAF9005FC7EB /* AndareWidgetsExtension */;
 		};
