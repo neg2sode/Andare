@@ -150,7 +150,7 @@ final class RideSessionManager: ObservableObject {
         locationManager.stopUpdates()
         
         guard let finalData = self.finaliseLocalData(context: context) else {
-            logDebug("Workout was too short or invalid to create a summary. Discarding.")
+            print("Workout was too short or invalid to create a summary. Discarding.")
             workoutBuilder?.discardWorkout()
             self.workoutBuilder = nil
             self.routeBuilder = nil
@@ -166,8 +166,10 @@ final class RideSessionManager: ObservableObject {
                 try await builder.endCollection(at: endDate)
                 try await builder.finishWorkout()
                 
-                if !self.cadenceSamples.isEmpty {
-                    try await healthStore.save(self.cadenceSamples)
+                if workoutType == .cycling {
+                    if !self.cadenceSamples.isEmpty {
+                        try await healthStore.save(self.cadenceSamples)
+                    }
                 }
             } catch {
                 logDebug("A failure occurred during HealthKit finalization: \(error.localizedDescription)")
@@ -560,7 +562,14 @@ final class RideSessionManager: ObservableObject {
 
     private func finaliseLocalData(context: ModelContext) -> WorkoutData? {
         guard let startDate = workoutBuilder?.startDate else { return nil }
-        let endDate = cadenceSegments.last?.timestamp ?? workoutBuilder?.endDate ?? Date()
+        let endDate = cadenceSegments.last?.timestamp ?? Date()
+        
+        /*
+        let duration = endDate.timeIntervalSince(startDate)
+        let minDuration = 30.0 // seconds
+        if duration < minDuration { return nil }
+        */
+        
         let logMessages = self.logEntries.map { "[\($0.formattedTimestamp)] \($0.message)" }
 
         let finalData = WorkoutData(

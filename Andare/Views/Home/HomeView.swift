@@ -251,12 +251,17 @@ struct HomeView: View {
     private func stopRide() {
         Task {
             if let summaryData = await rideSessionManager.stopRide(context: modelContext) {
-                rideState = .summary(data: summaryData)
-                VibrationManager.shared.playPatternB()
+                await MainActor.run {
+                    rideState = .summary(data: summaryData)
+                    VibrationManager.shared.playPatternB()
+                }
             } else {
-                // If stopping fails, go back to idle.
-                rideState = .idle
-                VibrationManager.shared.playPatternA()
+                await MainActor.run {
+                    // If stopping fails, go back to idle.
+                    rideState = .idle
+                    VibrationManager.shared.playPatternA()
+                    isDrawerPresented = true
+                }
             }
         }
     }
