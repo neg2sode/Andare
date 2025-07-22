@@ -8,6 +8,7 @@
 import SwiftUI
 import Charts
 import MapKit
+import UniformTypeIdentifiers // for pasteboard copying
 
 // Helper View for Legend Items
 struct LegendItem: View {
@@ -29,6 +30,10 @@ struct WorkoutSummaryView: View {
     private let data: WorkoutData
     private let coordinates: [CLLocationCoordinate2D]
     private let routePolyline: MKPolyline?
+    
+    private var debugLogString: String {
+        data.logMessages.joined(separator: "\n")
+    }
 
     @State private var isDoneButtonVisible = false
     @State private var isShowingFullMap = false
@@ -40,6 +45,7 @@ struct WorkoutSummaryView: View {
         self.data = data
         
         let validCoordinates = data.cadenceSegments
+            .filter { MovementActivity.zone(for: $0.speed ?? 0.0) != .stationary }
             .flatMap { $0.locations.map { $0.coordinate.adjustedForChina() } }
         self.coordinates = validCoordinates
 
@@ -326,6 +332,90 @@ struct WorkoutSummaryView: View {
             .cornerRadius(5)
             .padding(.top, 5)
         }
+        .contextMenu {
+            if data.logMessages.isEmpty {
+                // If there are no logs, show a disabled item as feedback.
+                Label("No Logs Available", systemImage: "xmark.circle")
+                    .disabled(true)
+            } else {
+                Button(action: copyDebugLogs) {
+                    Label("Copy Logs", systemImage: "document.on.clipboard")
+                }
+                
+                Button(action: sendEmail) {
+                    Label("Send Logs via Mail", systemImage: "paperplane.fill")
+                }
+            }
+        }
+    }
+    
+    private func sendEmail() {
+        let recipientEmail = "neg2sode@icloud.com"
+        let subject = "Andare Feedback - \(Date().formatted())"
+        let body = diagnosticMetadataHeader + "\n" + debugLogString
+        let urlString = "mailto:\(recipientEmail)?subject=\(subject)&body=\(body)"
+        
+        // Percent-encode the string to make it a valid URL
+        guard let encodedUrlString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let mailtoURL = URL(string: encodedUrlString) else {
+            print("❌ Failed to create mailto URL.")
+            return
+        }
+        
+        if UIApplication.shared.canOpenURL(mailtoURL) {
+            UIApplication.shared.open(mailtoURL)
+        } else {
+            print("Cannot open Mail app.")
+        }
+    }
+    
+    private func copyDebugLogs() {
+        UIPasteboard.general.string = debugLogString
+        VibrationManager.shared.playPatternA()
+    }
+    
+    private var diagnosticMetadataHeader: String {
+        // --- App Info ---
+        let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "N/A"
+        let buildNumber = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "N/A"
+        
+        // --- Device Info ---
+        let device = UIDevice.current
+        let osVersion = "\(device.systemName) \(device.systemVersion)"
+        
+        // Get device model identifier (e.g., "iPhone17,3")
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        let model = withUnsafePointer(to: &systemInfo.machine) {
+            $0.withMemoryRebound(to: CChar.self, capacity: 1) {
+                ptr in String(cString: ptr)
+            }
+        }
+        
+        // --- Locale Info ---
+        let languageCode = Locale.current.language.languageCode?.identifier ?? "N/A"
+        let regionCode = Locale.current.region?.identifier ?? "N/A"
+        
+        // --- Workout Info ---
+        let workoutID = data.id.uuidString
+        
+        // Assemble the report
+        let report = """
+        --- Device Report ---
+        Workout ID: \(workoutID)
+        
+        App Version: \(appVersion)
+        Build Number: \(buildNumber)
+        
+        Device Model: \(model)
+        OS Version: \(osVersion)
+        
+        Language: \(languageCode)
+        Region: \(regionCode)
+        ---------------------
+        """
+        
+        return report
     }
     
     @MapContentBuilder

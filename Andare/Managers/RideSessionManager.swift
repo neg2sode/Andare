@@ -325,7 +325,7 @@ final class RideSessionManager: ObservableObject {
         }
 
         // Create the static and initial dynamic data for the activity
-        let attributes = RideActivityAttributes(workoutType: self.workoutType)
+        let attributes = RideActivityAttributes(workoutType: workoutType)
         let initialState = RideActivityAttributes.ContentState(rideStartDate: nil, preferredCadence: nil)
         let content = ActivityContent(state: initialState, staleDate: nil)
 
@@ -383,6 +383,7 @@ final class RideSessionManager: ObservableObject {
         let duration = timestamp.timeIntervalSince(startTime)
         let relevantLocs = self.locationBuffer.filter { $0.timestamp > startTime && $0.timestamp <= timestamp }
         let relevantAlts = self.altitudeBuffer.filter { $0.timestamp > startTime && $0.timestamp <= timestamp }
+        let validLocs = relevantLocs.filter { $0.horizontalAccuracy >= 0 && $0.horizontalAccuracy <= 30 }
 
         var segmentSpeed: Double?
         var segmentDistance: CLLocationDistance?
@@ -394,10 +395,6 @@ final class RideSessionManager: ObservableObject {
         var segmentCadence = rawCadence
         var elevationGain: Double = 0
         var calorieResult: (active: Double, total: Double)? = nil
-
-        var validLocs = relevantLocs.filter {
-            $0.horizontalAccuracy >= 0 && $0.horizontalAccuracy <= 30
-        }
 
         if !relevantLocs.isEmpty {
             let validSpeeds = relevantLocs.compactMap { $0.speed >= 0 ? $0.speed : nil }
@@ -457,19 +454,20 @@ final class RideSessionManager: ObservableObject {
             }
         }
 
-        if movementActivity == .stationary {
-            segmentCadence = 0 // nullify the plot
-            validLocs = [] // don't show stationary segment on route map
+        if movementActivity == .stationary ||
+            terrainGradient == .level && movementActivity == .slow && speedTrend == .decelerating {
+            segmentCadence = 0
         }
         
-        let cadenceZone = CadenceZone.zone(for: segmentCadence, workoutType: self.workoutType)
+        let cadenceZone = CadenceZone.zone(for: segmentCadence, workoutType: workoutType)
 
-        if let dist = segmentDistance, let spd = segmentSpeed {
+        if let distance = segmentDistance, let speed = segmentSpeed {
             let inputs = CalorieCalculationInputs(
                 duration: duration,
-                distance: dist,
-                speed: spd,
-                workoutType: self.workoutType,
+                distance: distance,
+                speed: speed,
+                cadence: segmentCadence,
+                workoutType: workoutType,
                 weight: userWeightKg,
                 height: userHeightCm
             )
@@ -537,7 +535,7 @@ final class RideSessionManager: ObservableObject {
         
         var metadata: [String: Any] = [:]
         
-        metadata[HKMetadataKeyWorkoutBrandName] = "Andare \(self.workoutType.rawValue)"
+        metadata[HKMetadataKeyWorkoutBrandName] = "Andare \(workoutType.rawValue)"
         
         if self.elevationGain > 0 {
             let quantity = HKQuantity(unit: .meter(), doubleValue: self.elevationGain)
@@ -573,7 +571,7 @@ final class RideSessionManager: ObservableObject {
         let logMessages = self.logEntries.map { "[\($0.formattedTimestamp)] \($0.message)" }
 
         let finalData = WorkoutData(
-            workoutType: self.workoutType,
+            workoutType: workoutType,
             startTime: startDate,
             endTime: endDate,
             cadenceSegments: self.cadenceSegments,
