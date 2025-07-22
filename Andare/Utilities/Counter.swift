@@ -14,19 +14,18 @@ struct Counter {
     var uphill = 0
     var uphillBad = 0
     var inactive = 0
+    var inactiveOrSlow = 0
     var total = 0
     var split = 0
     
-    mutating func update(
-            zone: CadenceZone,
-            activity: MovementActivity,
-            trend: SpeedTrend,
-            gradient: TerrainGradient
-        ) {
+    mutating func update(zone: CadenceZone, activity: MovementActivity, trend: SpeedTrend, gradient: TerrainGradient) {
         total += 1
         
         if activity != .fast {
-            inactive += 1
+            inactiveOrSlow += 1
+            if activity != .slow {
+                inactive += 1
+            }
         }
         
         if gradient == .ascending {
@@ -55,8 +54,18 @@ struct Counter {
         guard total > 0 else { return }
 
         let inactiveRatio = Double(inactive) / Double(total)
-
+        
         if inactiveRatio > 0.75 {
+            await NotificationManager.shared.notifyRideStatus(type: .finishedWorkout)
+        }
+    }
+    
+    func judgeNotificationC() async {
+        guard total > 0 else { return }
+        
+        let inactiveOrSlowRatio = Double(inactiveOrSlow) / Double(total)
+        
+        if inactiveOrSlowRatio > 0.75 {
             await NotificationManager.shared.notifyRideStatus(type: .finishedWorkout)
         }
     }

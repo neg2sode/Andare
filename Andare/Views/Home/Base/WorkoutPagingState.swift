@@ -9,12 +9,7 @@ import Foundation
 import SwiftUI
 
 final class WorkoutPagingState: ObservableObject {
-    @Published var selectedWorkoutType: WorkoutType = .cycling
+    @AppStorage("preferredWorkoutType") var selectedWorkoutType: WorkoutType = .cycling
     
     let allWorkoutTypes: [WorkoutType] = WorkoutType.allCases
-    
-    init() {
-        let savedPreference = UserDefaults.standard.string(forKey: "preferredWorkoutType")
-        self.selectedWorkoutType = WorkoutType(rawValue: savedPreference ?? "") ?? .cycling
-    }
 }

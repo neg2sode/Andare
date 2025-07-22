@@ -286,8 +286,12 @@ final class RideSessionManager: ObservableObject {
                             await counter.judgeNotificationA()
                         }
                         
-                        if workoutType == .cycling && locationAuthStatus == .authorizedAlways || locationAuthStatus == .authorizedWhenInUse {
-                            await counter.judgeNotificationB()
+                        if locationAuthStatus == .authorizedAlways || locationAuthStatus == .authorizedWhenInUse {
+                            if workoutType == .cycling {
+                                await counter.judgeNotificationC()
+                            } else if workoutType == .walking || workoutType == .running {
+                                await counter.judgeNotificationB()
+                            }
                         }
                         
                         counter = Counter() // reset the counter

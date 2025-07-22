@@ -94,9 +94,9 @@ enum TerrainGradient: String, Codable {
 // CaseIterable for creating a menu for all typess, Identifiable for displaying type on UI
 enum WorkoutType: String, CaseIterable, Identifiable, Codable {
     var id: String { self.rawValue }
-    case cycling = "Outdoor Cycle"
-    case running = "Outdoor Run"
-    case walking = "Outdoor Walk"
+    case cycling = "Cycling"
+    case running = "Running"
+    case walking = "Walking"
     
     var title: String {
         switch self {
