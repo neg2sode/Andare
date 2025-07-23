@@ -80,7 +80,7 @@ struct RecentWorkoutsView: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(workoutsHeaderTitle)
                     .font(.title)
@@ -122,7 +122,7 @@ struct RecentWorkoutsView: View {
                             }
                             .listRowInsets(EdgeInsets())
                             .listRowSeparator(.hidden)
-                            .padding(.horizontal, 4)
+                            .padding(.horizontal, 1)
                             .padding(.vertical, 4)
                     }
                 }

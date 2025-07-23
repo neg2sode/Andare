@@ -342,31 +342,18 @@ struct WorkoutSummaryView: View {
                     Label("Copy Logs", systemImage: "document.on.clipboard")
                 }
                 
-                Button(action: sendEmail) {
-                    Label("Send Logs via Mail", systemImage: "paperplane.fill")
+                Button(action: sendDebugMail) {
+                    Label("Send Logs", systemImage: "paperplane.fill")
                 }
             }
         }
     }
     
-    private func sendEmail() {
-        let recipientEmail = "neg2sode@icloud.com"
-        let subject = "Andare Feedback - \(Date().formatted())"
+    private func sendDebugMail() {
+        let subject = "Andare Workout Debug Log - \(data.startTime.formatted())"
         let body = diagnosticMetadataHeader + "\n" + debugLogString
-        let urlString = "mailto:\(recipientEmail)?subject=\(subject)&body=\(body)"
         
-        // Percent-encode the string to make it a valid URL
-        guard let encodedUrlString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let mailtoURL = URL(string: encodedUrlString) else {
-            print("❌ Failed to create mailto URL.")
-            return
-        }
-        
-        if UIApplication.shared.canOpenURL(mailtoURL) {
-            UIApplication.shared.open(mailtoURL)
-        } else {
-            print("Cannot open Mail app.")
-        }
+        MailUtilities.send(subject: subject, body: body)
     }
     
     private func copyDebugLogs() {

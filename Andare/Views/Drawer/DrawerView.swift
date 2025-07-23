@@ -18,7 +18,7 @@ struct DrawerView: View {
         VStack(spacing: 0) {
             // MARK: - Drawer Header
             HStack {
-                Text("Andare Dev v1.7.2")
+                Text("Andare Dev v1.7.3")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
@@ -38,16 +38,10 @@ struct DrawerView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     RecentWorkoutsView(isExpanded: $workoutsExpanded)
+
+                    ArticlesView()
                     
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text("Articles")
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .padding(.horizontal)
-                        
-                        // The existing ArticlesView now sits below the title
-                        ArticlesView()
-                    }
+                    ContactMeView()
                 }
             }
             .onChange(of: drawerState.selectedDetent) { _, newDetent in
@@ -78,7 +72,8 @@ struct DrawerView: View {
         .background(Color(.systemBackground))
         .sheet(isPresented: $isShowingPreferences) {
             PreferencesView()
-                .presentationDetents([.medium])
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.hidden)
         }
     }
 }

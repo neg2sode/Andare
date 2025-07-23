@@ -22,20 +22,27 @@ struct ArticlesView: View {
     @State private var selectedArticle: Article? = nil
 
     var body: some View {
-        VStack(spacing: 10) {
-            ForEach(articles) { article in
-                ArticleThumbnailCardView(article: article)
-                    .onTapGesture {
-                        self.selectedArticle = article // Set the selected article on tap
-                    }
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Articles")
+                .font(.title)
+                .fontWeight(.bold)
+                .padding(.horizontal)
+            
+            VStack(spacing: 0) {
+                ForEach(articles) { article in
+                    ArticleThumbnailCardView(article: article)
+                        .onTapGesture {
+                            self.selectedArticle = article // Set the selected article on tap
+                        }
+                }
             }
-        }
-        .padding() // Padding around the entire list
-        .sheet(item: $selectedArticle) { article in
-            // The content of the sheet
-            // Wrap ArticleDetailView in NavigationView to get the title bar and Done button
-            NavigationView {
-                ArticleDetailView(article: article)
+            .padding(.horizontal)
+            .sheet(item: $selectedArticle) { article in
+                // The content of the sheet
+                // Wrap ArticleDetailView in NavigationView to get the title bar and Done button
+                NavigationView {
+                    ArticleDetailView(article: article)
+                }
             }
         }
     }

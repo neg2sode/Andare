@@ -25,148 +25,108 @@ struct PreferencesView: View {
     @State private var healthKitProfileLinked = false
 
     var body: some View {
-        NavigationStack {
-            Form {
-                // ─────────────────────────────────────────────────────────────────
-                // PERMISSIONS SECTION
-                Section(header: Text("Permissions")) {
-                    // 1) LOCATION ROW
-                    Button {
-                        handleLocationRowTap()
-                    } label: {
-                        HStack {
-                            Text("Location")
-                            Spacer()
+        VStack(spacing: 0) {
+            HStack {
+                Text("Preferences")
+                    .font(.title)
+                    .fontWeight(.bold)
+                
+                Spacer()
+                
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(
+                            Color.secondary,
+                            Color(.tertiarySystemFill)
+                        )
+                        .font(.title)
+                }
+            }
+            .padding()
+            
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Permissions")
+                            .font(.headline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal)
+                            .textCase(nil)
+                        
+                        VStack(spacing: 0) {
+                            Button(action: handleLocationRowTap) {
+                                PermissionRow(title: "Location", status: locationManager.authorisationStatus.permissionStatus)
+                            }
+                            .sheet(isPresented: $showingLocationWarningDetail) { LocationWarningDetailView() }
+                            
+                            Divider().padding(.leading)
+                            
+                            // Workouts Row
+                            Button(action: handleWorkoutsRowTap) {
+                                PermissionRow(title: "Workouts", status: healthKitManager.authorisationStatus(for: HKObjectType.workoutType()).permissionStatus)
+                            }
+                        }
+                        .buttonStyle(.plain) // Apply to all buttons within
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
+                    }
 
-                            // Icon logic:
-                            // • Green checkmark if authorized
-                            // • Orange warning if not authorized (denied/restricted/notDetermined)
-                            Group {
-                                switch locationManager.authorisationStatus {
-                                case .authorizedAlways, .authorizedWhenInUse:
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.green)
-                                case .denied, .restricted:
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                        .foregroundStyle(.orange)
-                                case .notDetermined:
-                                    Image(systemName: "info.circle.fill")
-                                        .foregroundStyle(.gray)
-                                @unknown default:
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                        .foregroundStyle(.orange)
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Profile")
+                                .font(.headline)
+                                .fontWeight(.medium)
+                                .foregroundStyle(.secondary)
+                                .textCase(nil)
+                            
+                            Spacer()
+                            
+                            HStack(spacing: 4) {
+                                Text("HealthKit")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                
+                                if healthKitProfileLinked {
+                                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                                } else {
+                                    Image(systemName: "info.circle.fill").foregroundStyle(.gray)
                                 }
                             }
+                            .padding(.horizontal)
                         }
-                    }
-                    .buttonStyle(.plain)
-                    // Present LocationWarningDetailView if needed
-                    .sheet(isPresented: $showingLocationWarningDetail) {
-                        LocationWarningDetailView()
-                    }
-
-                    // 2) HEALTHKIT (WORKOUTS) ROW
-                    Button {
-                        let hkStatus = healthKitManager.authorisationStatus(
-                            for: HKObjectType.workoutType()
-                        )
-                        if hkStatus != .sharingAuthorized {
-                            alertManager.showAlert(
-                                title: "How to Grant Workouts Permission",
-                                message: """
-                                    Andare needs permission to save Workouts in Health \
-                                    to track rides reliably. Please enable Workouts Sharing \
-                                    in Settings → Privacy & Security → Health → Andare.
-                                    """
-                            )
+                        .padding(.horizontal)
+                        
+                        VStack(spacing: 0) {
+                            ProfileRow(title: "Body Weight (kg)", value: $userWeightKg, formatter: .decimalFormatter)
+                            Divider().padding(.leading)
+                            ProfileRow(title: "Height (cm)", value: $userHeightCm, formatter: .decimalFormatter)
                         }
-                        // If already authorized, tapping does nothing
-                    } label: {
-                        HStack {
-                            Text("Workouts")
-                            Spacer()
-                            if healthKitManager.authorisationStatus(for: HKObjectType.workoutType())
-                                == .sharingAuthorized {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(.green)
-                            } else {
-                                Image(systemName: "xmark.octagon.fill")
-                                    .foregroundStyle(.red)
-                            }
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-                // ─────────────────────────────────────────────────────────────────
-
-                // ─────────────────────────────────────────────────────────────────
-                // PROFILE / BODY WEIGHT SECTION
-                Section {
-                    HStack {
-                        Text("Body Weight (kg)")
-                        Spacer()
-                        TextField("e.g. 70", value: $userWeightKg, formatter: NumberFormatter.decimalFormatter)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                    }
-                    HStack {
-                        Text("Height (cm)")
-                        Spacer()
-                        TextField("e.g. 170", value: $userHeightCm, formatter: NumberFormatter.decimalFormatter)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                    }
-                } header: {
-                    HStack {
-                        Text("Profile")
-                        Spacer()
-                        // ✨ NEW: Conditional "Linked with HealthKit" indicator
-                        if healthKitProfileLinked { // If ALL profile characteristics are authorized
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
-                        } else { // If NOT ALL are authorized
-                            Image(systemName: "info.circle.fill")
-                                .foregroundStyle(.gray)
-                        }
-                        Text("HealthKit") // Generic text
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
                     }
                 }
-            } // End Form
-            .navigationTitle("Preferences")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .symbolRenderingMode(.palette)
-                            .foregroundStyle(
-                                Color.secondary,
-                                Color(.tertiarySystemFill)
-                            )
-                            .imageScale(.large)
-                    }
-                }
+                .padding(.vertical)
             }
-            // ─────────────────────────────────────────────────────────────────
-            // SINGLE ALERT HANDLER (for HealthKit row)
-            .alert(alertManager.title, isPresented: $alertManager.isPresenting) {
-                if alertManager.showSettingsButton {
-                    Button("Open Settings") {
-                        UIApplication.openAppSettings()
-                    }
-                    Button("Cancel", role: .cancel) { }
-                } else {
-                    Button("OK", role: .cancel) { }
+        }
+        .alert(alertManager.title, isPresented: $alertManager.isPresenting) {
+            if alertManager.showSettingsButton {
+                Button("Open Settings") {
+                    UIApplication.openAppSettings()
                 }
-            } message: {
-                Text(alertManager.message)
+                Button("Cancel", role: .cancel) { }
+            } else {
+                Button("OK", role: .cancel) { }
             }
-            // ─────────────────────────────────────────────────────────────────
-        } // End NavigationStack
+        } message: {
+            Text(alertManager.message)
+        }
         .onAppear {
             self.healthKitProfileLinked = healthKitManager.profileCharacteristicsAuthorised()
         }
@@ -174,11 +134,6 @@ struct PreferencesView: View {
 
     // MARK: - Helper Methods
 
-    /// Handle tapping the Location row:
-    /// • If authorized OR user has chosen “Don't show again” (showLocationWarningPreference == false),
-    ///   open system Settings.
-    /// • Otherwise (status is denied/restricted/notDetermined AND showLocationWarningPreference == true),
-    ///   show the LocationWarningDetailView sheet.
     private func handleLocationRowTap() {
         let status = locationManager.authorisationStatus
 
@@ -188,6 +143,105 @@ struct PreferencesView: View {
         } else if status == .restricted || status == .denied {
             // Location not authorized AND user still wants to see the warning → show detail sheet
             showingLocationWarningDetail = true
+        }
+    }
+    
+    private func handleWorkoutsRowTap() {
+        let status = healthKitManager.authorisationStatus(
+            for: HKObjectType.workoutType()
+        )
+        if status != .sharingAuthorized {
+            alertManager.showAlert(
+                title: "How to Grant Workouts Permission",
+                message: """
+                    Andare needs permission to save Workouts in Health \
+                    to track rides reliably. Please enable Workouts Sharing \
+                    in Settings → Privacy & Security → Health → Andare.
+                    """
+            )
+        }
+    }
+}
+
+// A helper for the simple "Title" + "Status Icon" rows
+struct PermissionRow: View {
+    let title: String
+    let status: PermissionStatus
+    
+    var body: some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Image(systemName: status.iconName)
+                .foregroundStyle(status.iconColor)
+        }
+        .padding()
+        .contentShape(Rectangle())
+    }
+}
+
+// A helper for the "Title" + "TextField" rows
+struct ProfileRow: View {
+    let title: String
+    @Binding var value: Double
+    let formatter: NumberFormatter
+    
+    var body: some View {
+        HStack {
+            Text(title)
+            Spacer()
+            TextField("Value", value: $value, formatter: formatter)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+        }
+        .padding()
+    }
+}
+
+// MARK: - Helper Enums and Extensions
+
+// An enum to decouple the view from CoreLocation/HealthKit types
+enum PermissionStatus {
+    case granted, denied, warning, undetermined
+    
+    var iconName: String {
+        switch self {
+            case .granted: "checkmark.circle.fill"
+            case .denied: "xmark.octagon.fill"
+            case .warning: "exclamationmark.triangle.fill"
+            case .undetermined: "info.circle.fill"
+        }
+    }
+    
+    var iconColor: Color {
+        switch self {
+            case .granted: .green
+            case .denied: .red
+            case .warning: .orange
+            case .undetermined: .gray
+        }
+    }
+}
+
+// Extend the system types to map to our view-specific enum
+extension CLAuthorizationStatus {
+    var permissionStatus: PermissionStatus {
+        switch self {
+            case .authorizedAlways, .authorizedWhenInUse: .granted
+            case .denied, .restricted: .warning
+            case .notDetermined: .undetermined
+            @unknown default: .warning
+        }
+    }
+}
+
+extension HKAuthorizationStatus {
+    var permissionStatus: PermissionStatus {
+        switch self {
+            case .sharingAuthorized: .granted
+            case .sharingDenied: .denied
+            case .notDetermined: .undetermined
+            @unknown default: .denied
         }
     }
 }

@@ -73,7 +73,7 @@ struct LocationWarningDetailView: View {
                         UIApplication.openAppSettings()
                         dismiss()
                     } label: {
-                        Text("Enable Tracking in Settings")
+                        Text("Enable in Settings")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
