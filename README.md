@@ -8,7 +8,7 @@ Finding the right pace in cycling and running can be hard for many since human b
 <img width="3000" height="2250" alt="andare_showcase" src="https://github.com/user-attachments/assets/25a7f3e7-35fa-4b3d-97e7-a84d438b55db" />
 
 ## About Me
-Hey! My name is neg2sode, and I'm a college student born & raised in Shanghai / studying in London. Aside from being a student, I'm also a passionate mountain biker who also spends time training on the road.
+Hey! My name is neg2sode, and I'm an undergraduate student born & raised in Shanghai / studying in London. Aside from being a student, I'm also a passionate mountain biker who also spends time training on the road.
 
 Dealing with knee pain has made me more aware of how critical proper cadence is during cycling, but I didn't want to rely on a physical cadence sensor for my bike, so Andare began as a personal project - born out of necessity and curiosity. After observing people in my community and speaking with my family and friends, I realised many people face similar challenges in maintaining a healthy cadence. So I started building Andare in a way that can benefit not just me, but others as well.
 
