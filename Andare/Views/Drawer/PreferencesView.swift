@@ -45,11 +45,12 @@ struct PreferencesView: View {
                         .font(.title)
                 }
             }
-            .padding()
+            .padding(.top)
+            .padding(.bottom, 8)
+            .padding(.horizontal)
             
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Permissions")
                             .font(.headline)
@@ -76,7 +77,7 @@ struct PreferencesView: View {
                         .cornerRadius(12)
                         .padding(.horizontal)
                     }
-
+                    
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("Profile")
@@ -115,6 +116,7 @@ struct PreferencesView: View {
                 .padding(.vertical)
             }
         }
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .alert(alertManager.title, isPresented: $alertManager.isPresenting) {
             if alertManager.showSettingsButton {
                 Button("Open Settings") {
@@ -137,12 +139,10 @@ struct PreferencesView: View {
     private func handleLocationRowTap() {
         let status = locationManager.authorisationStatus
 
-        // If user already opted out of warnings OR Location is authorized, open Settings
-        if !showLocationWarningPreference || status == .notDetermined {
-            UIApplication.openAppSettings()
-        } else if status == .restricted || status == .denied {
-            // Location not authorized AND user still wants to see the warning → show detail sheet
+        if (status == .restricted || status == .denied) && showLocationWarningPreference {
             showingLocationWarningDetail = true
+        } else {
+            UIApplication.openAppSettings()
         }
     }
     

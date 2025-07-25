@@ -22,7 +22,7 @@ struct ArticlesView: View {
     @State private var selectedArticle: Article? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 4) {
             Text("Articles")
                 .font(.title)
                 .fontWeight(.bold)

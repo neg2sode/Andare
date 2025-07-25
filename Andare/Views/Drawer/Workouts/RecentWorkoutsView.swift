@@ -80,7 +80,7 @@ struct RecentWorkoutsView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(spacing: 4) {
             HStack {
                 Text(workoutsHeaderTitle)
                     .font(.title)
@@ -93,55 +93,54 @@ struct RecentWorkoutsView: View {
                     .padding(.vertical)
                     .transition(.opacity)
             } else {
-                // 1. We now use a List to get swipe-to-delete.
-                List {
-                    ForEach(workoutsToShow) { workout in
-                        WorkoutThumbnailCardView(workout: workout)
-                            .onTapGesture {
-                                self.selectedWorkoutData = WorkoutData(from: workout)
-                            }
-                            .contextMenu {
-                                contextMenuButtons(for: workout)
-                            }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button(role: .destructive) {
-                                    updateWorkout(workout, to: .hidden)
-                                } label: {
-                                    Label("Hide", systemImage: "eye.slash.fill")
+                VStack(spacing: 8) {
+                    List {
+                        ForEach(workoutsToShow) { workout in
+                            WorkoutThumbnailCardView(workout: workout)
+                                .onTapGesture {
+                                    self.selectedWorkoutData = WorkoutData(from: workout)
                                 }
-                                .tint(.blue) // Use a distinct color for Hide
-                            }
-                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                Button {
-                                    self.workoutToDelete = workout
-                                    self.isShowingDeleteConfirm = true
-                                } label: {
-                                    Label("Delete", systemImage: "trash.fill")
+                                .contextMenu {
+                                    contextMenuButtons(for: workout)
                                 }
-                                .tint(.red)
-                            }
-                            .listRowInsets(EdgeInsets())
-                            .listRowSeparator(.hidden)
-                            .padding(.horizontal, 1)
-                            .padding(.vertical, 4)
-                    }
-                }
-                .listStyle(.plain)
-                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: workoutsToShow)
-                // 3. This is the crucial part: we constrain the List's frame height.
-                // This tells the List its exact size, preventing the layout conflict.
-                .frame(height: rowHeight * CGFloat(workoutsToShow.count))
-                .scrollDisabled(true) // The parent ScrollView in DrawerView handles scrolling.
-
-                if shouldShowMoreButton {
-                    Button("Show More") {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            isExpanded = true
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        updateWorkout(workout, to: .hidden)
+                                    } label: {
+                                        Label("Hide", systemImage: "eye.slash.fill")
+                                    }
+                                    .tint(.blue) // Use a distinct color for Hide
+                                }
+                                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                    Button {
+                                        self.workoutToDelete = workout
+                                        self.isShowingDeleteConfirm = true
+                                    } label: {
+                                        Label("Delete", systemImage: "trash.fill")
+                                    }
+                                    .tint(.red)
+                                }
+                                .listRowInsets(EdgeInsets())
+                                .listRowSeparator(.hidden)
+                                .padding(.horizontal, 1)
+                                .padding(.vertical, 4)
                         }
                     }
-                    .fontWeight(.semibold)
-                    .contentShape(Rectangle())
-                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    .listStyle(.plain)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: workoutsToShow)
+                    .frame(height: rowHeight * CGFloat(workoutsToShow.count))
+                    .scrollDisabled(true)
+                    
+                    if shouldShowMoreButton {
+                        Button("Show More") {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                isExpanded = true
+                            }
+                        }
+                        .fontWeight(.semibold)
+                        .contentShape(Rectangle())
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    }
                 }
             }
         }

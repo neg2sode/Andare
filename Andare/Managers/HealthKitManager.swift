@@ -9,6 +9,8 @@ import Foundation
 import HealthKit
 
 final class HealthKitManager: ObservableObject {
+    @Published var authorisationStatus: HKAuthorizationStatus
+    
     private let healthStore = HKHealthStore()
 
     // Define the types we want to read and share
@@ -31,6 +33,14 @@ final class HealthKitManager: ObservableObject {
         HKQuantityType(.bodyMass),
         HKQuantityType(.height)
     ]
+    
+    init() {
+        self.authorisationStatus = healthStore.authorizationStatus(for: HKObjectType.workoutType())
+    }
+    
+    func refreshStatus() {
+        authorisationStatus = healthStore.authorizationStatus(for: HKObjectType.workoutType())
+    }
 
     // Function to request authorization from the user
     func requestAuthorisation() async throws {
@@ -44,6 +54,8 @@ final class HealthKitManager: ObservableObject {
         } catch {
             throw error
         }
+        
+        refreshStatus()
     }
 
     // Check authorization status for a specific type

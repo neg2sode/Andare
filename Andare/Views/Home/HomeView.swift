@@ -19,24 +19,43 @@ struct HomeView: View {
     
     @State private var isDrawerPresented = false
     @State private var isShowingLocationWarning = false
-    @State private var rideState: RideFlowState = .idle
+    @State private var sessionState: SessionState = .idle
     
     private let timer = Timer.publish(every: 1.2, on: .main, in: .common).autoconnect()
     
     @Environment(\.modelContext) private var modelContext
     
-    enum RideFlowState: Equatable {
+    @AppStorage("hasShownCyclingGuide") private var hasShownCyclingGuide: Bool = false
+    @AppStorage("hasShownRunningGuide") private var hasShownRunningGuide: Bool = false
+    @AppStorage("hasShownWalkingGuide") private var hasShownWalkingGuide: Bool = false
+    
+    private var isFirstGuideEver: Bool {
+        return !hasShownCyclingGuide && !hasShownRunningGuide && !hasShownWalkingGuide
+    }
+    
+    private func hasShownGuide(for workoutType: WorkoutType) -> Bool {
+        switch workoutType {
+            case .cycling: return hasShownCyclingGuide
+            case .running: return hasShownRunningGuide
+            case .walking: return hasShownWalkingGuide
+        }
+    }
+    
+    enum SessionState: Equatable {
         case idle
+        case showingGuide(workoutType: WorkoutType, requestAuth: Bool)
         case countingDown(Int)
         case starting
         case active
         case summary(data: WorkoutData)
         case transitioning
         
-        static func == (lhs: RideFlowState, rhs: RideFlowState) -> Bool {
+        static func == (lhs: SessionState, rhs: SessionState) -> Bool {
             switch (lhs, rhs) {
             case (.idle, .idle), (.starting, .starting), (.active, .active), (.transitioning, .transitioning):
                 return true
+            case (.showingGuide(let lType, let lAuth), .showingGuide(let rType, let rAuth)):
+                return lType == rType && lAuth == rAuth
             case (.countingDown(let l), .countingDown(let r)):
                 return l == r
             case (.summary(let l), .summary(let r)):
@@ -51,7 +70,7 @@ struct HomeView: View {
         Binding<WorkoutData?>(
             get: {
                 // The sheet should be presented if our state is .summary
-                if case .summary(let data) = self.rideState {
+                if case .summary(let data) = self.sessionState {
                     return data
                 }
                 return nil
@@ -60,7 +79,7 @@ struct HomeView: View {
                 // When the sheet is dismissed, its item is set to nil.
                 // We transition our state to .transitioning.
                 if $0 == nil {
-                    self.rideState = .transitioning
+                    self.sessionState = .transitioning
                 }
             }
         )
@@ -81,7 +100,7 @@ struct HomeView: View {
             ZStack {
                 // The switch statement ensures only one view is shown at a time,
                 // based on the explicit `rideState`.
-                switch rideState {
+                switch sessionState {
                 case .idle:
                     idleView
                         .transition(.opacity.animation(.easeInOut(duration: 0.5)))
@@ -97,6 +116,16 @@ struct HomeView: View {
                 case .starting, .active:
                     activeRideView
                         .transition(.opacity.animation(.easeInOut(duration: 0.5)))
+                
+                case .showingGuide(let workoutType, let requestAuth):
+                    GuideView(
+                        workoutType: workoutType,
+                        requestAuth: requestAuth,
+                        continueAction: {
+                            handleGuideCompletion(for: workoutType)
+                        }
+                    )
+                    .transition(.opacity.animation(.easeInOut))
                 }
             }
             .drawerSheet(isPresented: $isDrawerPresented, drawerState: drawerState) {
@@ -120,20 +149,23 @@ struct HomeView: View {
                 isDrawerPresented = true
                 rideSessionManager.resetSessionState()
                 // transition to the .idle state and unlock the UI
-                rideState = .idle
+                sessionState = .idle
             }) { summaryData in
                 WorkoutSummaryView(data: summaryData)
             }
             .onChange(of: rideSessionManager.locationAuthStatus) { oldStatus, newStatus in
                 // This handles starting the ride automatically after location permissions are granted.
-                if oldStatus == .notDetermined {
-                    switch newStatus {
-                    case .authorizedWhenInUse, .authorizedAlways:
-                        startRideSequence()
-                    case .denied, .restricted:
-                        isShowingLocationWarning = true
-                    default:
-                        break
+                if sessionState == .idle {
+                    if oldStatus == .notDetermined {
+                        switch newStatus {
+                        case .authorizedWhenInUse, .authorizedAlways:
+                            rideSessionManager.startRidePreparations()
+                            proceedToCountdown()
+                        case .denied, .restricted:
+                            isShowingLocationWarning = true
+                        default:
+                            break
+                        }
                     }
                 }
             }
@@ -159,7 +191,7 @@ struct HomeView: View {
         PagingCarousel(selection: $pagingState.selectedWorkoutType, pages: pagingState.allWorkoutTypes) { workoutType in
             StartWorkoutButtonView(
                 workoutType: workoutType,
-                action: startRideSequence
+                action: startWorkoutSequence
             )
         }
     }
@@ -172,8 +204,8 @@ struct HomeView: View {
                 
             VStack {
                 Spacer()
-                Button(action: stopRide) {
-                    Text("Stop Ride")
+                Button(action: stopWorkout) {
+                    Text("Stop Workout")
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
@@ -208,57 +240,75 @@ struct HomeView: View {
         .ignoresSafeArea()
         .contentShape(Rectangle())
         .onTapGesture {
-            skipCountdownAndStartRide()
+            skipCountdownAndStartWorkout()
         }
     }
     
     // MARK: - State Transition Logic
     
+    private func proceedToCountdown() {
+        withAnimation {
+            sessionState = .countingDown(5)
+            isDrawerPresented = false
+        }
+    }
+    
+    private func handleGuideCompletion(for workoutType: WorkoutType) {
+        switch workoutType {
+            case .cycling: hasShownCyclingGuide = true
+            case .running: hasShownRunningGuide = true
+            case .walking: hasShownWalkingGuide = true
+        }
+        
+        rideSessionManager.startRidePreparations()
+        proceedToCountdown()
+    }
+    
     private func handleCountdown() {
-        guard case .countingDown(let currentCount) = rideState else { return }
+        guard case .countingDown(let currentCount) = sessionState else { return }
         
         if currentCount <= 4 {
             VibrationManager.shared.playPatternC()
         }
 
         if currentCount > 1 {
-            rideState = .countingDown(currentCount - 1)
+            sessionState = .countingDown(currentCount - 1)
         } else {
             // Countdown finished, transition to the starting state and begin the async ride start.
-            rideState = .starting
-            startRide()
+            sessionState = .starting
+            startWorkout()
         }
     }
     
-    private func skipCountdownAndStartRide() {
+    private func skipCountdownAndStartWorkout() {
         // This guard prevents this function from running more than once,
         // for example, if the user taps at the exact same moment the timer fires.
-        guard case .countingDown = rideState else { return }
+        guard case .countingDown = sessionState else { return }
 
         // Transition to the .starting state to show the stats view immediately.
-        rideState = .starting
-        startRide()
+        sessionState = .starting
+        startWorkout()
     }
 
-    private func startRide() {
+    private func startWorkout() {
         Task {
             await rideSessionManager.startRide()
             // After the async start completes, transition to the fully active state.
-            rideState = .active
+            sessionState = .active
         }
     }
     
-    private func stopRide() {
+    private func stopWorkout() {
         Task {
             if let summaryData = await rideSessionManager.stopRide(context: modelContext) {
                 await MainActor.run {
-                    rideState = .summary(data: summaryData)
+                    sessionState = .summary(data: summaryData)
                     VibrationManager.shared.playPatternB()
                 }
             } else {
                 await MainActor.run {
                     // If stopping fails, go back to idle.
-                    rideState = .idle
+                    sessionState = .idle
                     VibrationManager.shared.playPatternA()
                     isDrawerPresented = true
                 }
@@ -266,50 +316,35 @@ struct HomeView: View {
         }
     }
 
-    private func startRideSequence() {
-        Task {
-            do {
-                try await healthKitManager.requestAuthorisation()
-                
-                await MainActor.run {
-                    let workoutType = HKObjectType.workoutType()
-                    guard healthKitManager.authorisationStatus(for: workoutType) == .sharingAuthorized else {
-                        alertManager.showAlert(
-                            title: "Workouts Permission Required",
-                            message: "Andare needs permission to save Workouts in Health to track rides reliably. Please enable Workouts Sharing in Settings > Privacy & Security > Health > Andare."
-                        )
-                        return
-                    }
-                    
-                    let locationStatus = rideSessionManager.locationAuthStatus
-                    
-                    switch locationStatus {
-                    case .authorizedWhenInUse, .authorizedAlways, .denied, .restricted:
-                        // Warm up sensors immediately, then start the UI countdown.
-                        rideSessionManager.startRidePreparations()
-                        withAnimation {
-                            rideState = .countingDown(5)
-                            isDrawerPresented = false
-                        }
-                    case .notDetermined:
-                        rideSessionManager.locationManager.requestAuthorisation()
-                    @unknown default:
-                        alertManager.showAlert(
-                            title: "Location Status Unknown",
-                            message: "Could not determine location status. Attempting to start ride anyway."
-                        )
-                        startRide()
-                        withAnimation {
-                            isDrawerPresented = false
-                        }
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    alertManager.showAlert(title: "HealthKit Error", message: "Could not request HealthKit permissions. \(error.localizedDescription)")
-                }
+    private func startWorkoutSequence(for workoutType: WorkoutType) {
+        let locationStatus = rideSessionManager.locationAuthStatus
+        
+        if !hasShownGuide(for: workoutType) {
+            if isFirstGuideEver || locationStatus == .notDetermined {
+                sessionState = .showingGuide(workoutType: workoutType, requestAuth: true)
+            } else {
+                sessionState = .showingGuide(workoutType: workoutType, requestAuth: false)
             }
+            isDrawerPresented = false
+            return
         }
+        
+        let hkWorkoutStatus = healthKitManager.authorisationStatus(for: HKObjectType.workoutType())
+        guard hkWorkoutStatus == .sharingAuthorized else {
+            alertManager.showAlert(
+                title: "Workouts Permission Required",
+                message: "Please enable Workouts Sharing in Settings → Privacy & Security → Health → Andare to start a workout."
+            )
+            return
+        }
+
+        guard locationStatus == .authorizedWhenInUse || locationStatus == .authorizedAlways else {
+            rideSessionManager.locationManager.requestAuthorisation()
+            return
+        }
+        
+        rideSessionManager.startRidePreparations()
+        proceedToCountdown()
     }
 }
 
@@ -326,7 +361,7 @@ struct LockScreenNudgeView: View {
                         .foregroundStyle(.primary)
                         .offset(x: isJumping ? 10 : 0)
                     
-                    Text("Lock your screen\nPut iPhone in pocket")
+                    Text("Lock your screen safely\nStarting workout in no time")
                         .font(.title3)
                         .fontWeight(.medium)
                         .multilineTextAlignment(.trailing)

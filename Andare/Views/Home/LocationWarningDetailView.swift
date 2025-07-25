@@ -18,14 +18,14 @@ struct LocationWarningDetailView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
                         // Header
-                        Text("Why Location Access Matters")
+                        Text("Why Location Permission Matters")
                             .font(.title)
                             .fontWeight(.semibold)
 
                         // Feature List
-                        VStack(alignment: .leading, spacing: 20) {
+                        VStack(alignment: .leading, spacing: 24) {
                             VStack(alignment: .leading, spacing: 6) {
-                                Label("Cadence Monitoring Continuity", systemImage: "gauge")
+                                Label("Cadence Monitoring Continuity", systemImage: "metronome")
                                     .font(.body)
                                 
                                 Text("Ensures your cadence data remains continuous even when the app is running in the background.")
@@ -34,7 +34,7 @@ struct LocationWarningDetailView: View {
                             }
 
                             VStack(alignment: .leading, spacing: 6) {
-                                Label("Real‑Time Alerts", systemImage: "bell.circle")
+                                Label("Real‑Time Alerts", systemImage: "bell")
                                     .font(.body)
                                 
                                 Text("Get timely notifications for cadence zones.")
@@ -51,9 +51,13 @@ struct LocationWarningDetailView: View {
                                     .padding(.leading, 28)
                             }
                         }
+                        
+                        Text("Critical for all features.")
+                            .font(.callout)
+                            .fontWeight(.bold)
 
                         // Learn More link
-                        Link("Learn More", destination: URL(string: "https://google.com")!)
+                        Link("Learn More", destination: URL(string: "https://github.com/neg2sode/Andare")!)
                             .font(.callout)
                             .foregroundStyle(Color.accentColor)
 

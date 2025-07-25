@@ -108,9 +108,9 @@ enum WorkoutType: String, CaseIterable, Identifiable, Codable {
     
     var sfSymbolName: String {
         switch self {
-        case .cycling: "figure.outdoor.cycle"
-        case .running: "figure.run"
-        case .walking: "figure.walk"
+            case .cycling: "figure.outdoor.cycle"
+            case .running: "figure.run"
+            case .walking: "figure.walk"
         }
     }
     

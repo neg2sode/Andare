@@ -129,7 +129,7 @@ struct WorkoutSummaryView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.accent)
+                        .background(Color.accentColor)
                         .cornerRadius(16)
                 }
                 .padding(.horizontal)

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct StartWorkoutButtonView: View {
     let workoutType: WorkoutType
-    let action: () -> Void
+    let action: (WorkoutType) -> Void
     
     // State to drive the continuous animation
     @State private var isAnimating: Bool = false
@@ -23,7 +23,9 @@ struct StartWorkoutButtonView: View {
                 .foregroundStyle(.primary)
             
             // 2. The main breathing button
-            Button(action: self.action) {
+            Button(action: {
+                self.action(self.workoutType)
+            }) {
                 ZStack {
                     // The circular background
                     Circle()
@@ -48,11 +50,5 @@ struct StartWorkoutButtonView: View {
                 self.isAnimating = true
             }
         }
-    }
-}
-
-struct StartWorkoutButtonView_Previews: PreviewProvider {
-    static var previews: some View {
-        StartWorkoutButtonView(workoutType: .cycling, action: {})
     }
 }

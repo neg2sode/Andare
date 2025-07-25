@@ -13,15 +13,17 @@ private class CustomSheetHostingController<Content: View>: UIViewController {
     // State properties
     var isPresented: Binding<Bool>
     let sheetContent: AnyView
+    let coordinator: SheetPresenter<Content>.Coordinator
     
     // The currently presented sheet, so we can dismiss it.
     private var presentedSheet: UIViewController?
 
     // Initializer
-    init(isPresented: Binding<Bool>, sheetContent: Content) {
+    init(isPresented: Binding<Bool>, sheetContent: Content, coordinator: SheetPresenter<Content>.Coordinator) {
         self.isPresented = isPresented
         // Type-erase the content to store it
         self.sheetContent = AnyView(sheetContent)
+        self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
         // The controller's own view is clear, it's just a presenter.
         self.view.backgroundColor = .clear
@@ -55,6 +57,7 @@ private class CustomSheetHostingController<Content: View>: UIViewController {
                 sheet.largestUndimmedDetentIdentifier = .init("tiny")
                 sheet.prefersGrabberVisible = true
                 sheet.prefersScrollingExpandsWhenScrolledToEdge = true
+                sheet.delegate = self.coordinator
             }
             
             self.present(hostingController, animated: animated)
@@ -96,14 +99,11 @@ fileprivate struct SheetPresenter<Content: View>: UIViewControllerRepresentable 
     }
 
     func makeUIViewController(context: Context) -> CustomSheetHostingController<Content> {
-        return CustomSheetHostingController(isPresented: $isPresented, sheetContent: content)
+        return CustomSheetHostingController(isPresented: $isPresented, sheetContent: content, coordinator: context.coordinator)
     }
 
     func updateUIViewController(_ uiViewController: CustomSheetHostingController<Content>, context: Context) {
         uiViewController.isPresented = $isPresented
-        if let sheet = uiViewController.presentedViewController?.sheetPresentationController {
-            sheet.delegate = context.coordinator
-        }
         uiViewController.updateSheet()
     }
 }
