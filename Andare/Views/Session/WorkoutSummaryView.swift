@@ -124,15 +124,14 @@ struct WorkoutSummaryView: View {
             if isDoneButtonVisible {
                 Button(action: { dismiss() }) {
                     Text("Done")
-                        .font(.headline)
-                        .fontWeight(.semibold)
+                        .font(.headline).fontWeight(.semibold)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.accentColor)
                         .cornerRadius(16)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 30)
                 .padding(.bottom)
                 .shadow(radius: 5)
                 .transition(.move(edge: .bottom).combined(with: .opacity))

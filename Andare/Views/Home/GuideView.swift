@@ -5,8 +5,6 @@
 //  Created by neg2sode on 2025/7/25.
 //
 
-// File: GuideView.swift
-
 import SwiftUI
 import HealthKit
 
@@ -20,18 +18,16 @@ struct WorkoutGuidance {
             return .init(
                 title: "For Cycling",
                 points: [
-                    "Place your iPhone in a hip pocket or waistband.",
-                    "Cadence is detected from your body's rotation — backpacks or mounts won't work.",
-                    "Ensure your phone is secure during high speeds."
+                    "Tuck your phone tightly in a hip pocket or waistband.",
+                    "Cadence is detected from your body's rotation — backpacks or mounts won't work."
                 ]
             )
         case .running:
             return .init(
                 title: "For Running",
                 points: [
-                    "Hold the phone firmly in your hand.",
-                    "Alternatively, tuck it into a tight pocket or waistband.",
-                    "A secure fit is key for accurate measurement."
+                    "Place your phone in a hip pocket or waistband.",
+                    "Alternatively, hold your phone firmly in your hand."
                 ]
             )
         case .walking:
@@ -39,8 +35,7 @@ struct WorkoutGuidance {
                 title: "For Walking",
                 points: [
                     "Any stable spot works well.",
-                    "A pocket, waistband, or carrying it in your hand are all great options.",
-                    "Enjoy your walk!"
+                    "A pocket, waistband, or carrying it in your hand are all great options."
                 ]
             )
         }
@@ -52,6 +47,7 @@ struct GuideView: View {
     let workoutType: WorkoutType
     let requestAuth: Bool
     let continueAction: () -> Void
+    let cancelAction: () -> Void
     
     private var guidance: WorkoutGuidance {
         .forType(workoutType)
@@ -61,51 +57,69 @@ struct GuideView: View {
     @StateObject private var locationManager = LocationManager()
     @StateObject private var healthKitManager = HealthKitManager()
     
+    @State private var hasAppeared = false
+    
     @Environment(\.scenePhase) private var scenePhase
 
     // MARK: - Body
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text("Before You Start…")
-                    .font(.largeTitle).fontWeight(.bold)
-                    .padding(.top)
+        VStack(alignment: .leading, spacing: 24) {
+            Text("Before You Start…")
+                .font(.largeTitle).fontWeight(.bold)
+                .padding(.top, 50)
+                .padding(.horizontal, 30)
 
-                // 2. The new workout-specific guidance section
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        Image(systemName: workoutType.sfSymbolName)
-                            .font(.headline)
-                            .foregroundStyle(Color.accentColor)
-                        Text(guidance.title)
-                            .font(.headline)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 30) {
+                    // 2. The new workout-specific guidance section
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Image(systemName: workoutType.sfSymbolName)
+                                .font(.headline)
+                                .foregroundStyle(Color.accentColor)
+                                .symbolEffect(.bounce, value: hasAppeared)
+                            
+                            Text(guidance.title)
+                                .font(.headline)
+                        }
+                        .opacity(hasAppeared ? 1 : 0)
+                        .animation(.easeIn(duration: 0.3), value: hasAppeared)
+                        
+                        ForEach(Array(guidance.points.enumerated()), id: \.offset) { index, point in
+                            Label(point, systemImage: "checkmark.circle.fill")
+                                .font(.subheadline)
+                                .foregroundStyle(.primary)
+                                .opacity(hasAppeared ? 1 : 0)
+                                .offset(y: hasAppeared ? 0 : 10)
+                                // Each item animates in with a progressive delay
+                                .animation(
+                                    .easeOut(duration: 0.4).delay(0.3 + Double(index) * 0.15),
+                                    value: hasAppeared
+                                )
+                        }
                     }
                     
-                    ForEach(guidance.points, id: \.self) { point in
-                        Label(point, systemImage: "checkmark.circle.fill")
-                            .font(.subheadline)
-                            .foregroundStyle(.primary)
+                    if workoutType != .walking {
+                        RiskWarningView()
+                            // This will now fade in after the points
+                            .opacity(hasAppeared ? 1 : 0)
+                            .animation(.easeIn(duration: 0.4).delay(0.7), value: hasAppeared)
+                    }
+                    
+                    if requestAuth {
+                        permissionSection
+                            // This fades in last
+                            .opacity(hasAppeared ? 1 : 0)
+                            .animation(.easeIn(duration: 0.4).delay(1.2), value: hasAppeared)
                     }
                 }
+                .padding(.horizontal, 30)
+            }
+            
+            Spacer()
 
-                // 3. The new, prominent risk warning view
-                if workoutType != .walking {
-                    RiskWarningView()
-                }
-                
-                // The existing permission section
-                if requestAuth {
-                    permissionSection
-                }
-                
-                Text("(You'll only see this guidance once for each type of workout.)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                
-                Spacer()
-
-                // Continue Button
+            // Buttons
+            VStack(spacing: 24) {
                 Button(action: continueAction) {
                     Text("Let's Go")
                         .font(.headline).fontWeight(.semibold)
@@ -118,13 +132,21 @@ struct GuideView: View {
                 .disabled(requestAuth && !arePermissionsGranted)
                 .opacity(requestAuth && !arePermissionsGranted ? 0.5 : 1.0)
                 .animation(.easeInOut, value: arePermissionsGranted)
+                
+                Button("I'm not Ready", action: cancelAction)
+                    .font(.headline).fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
             }
-            .padding(30)
-            .onChange(of: scenePhase) { _, newPhase in
-                if newPhase == .active {
-                    healthKitManager.refreshStatus()
-                }
+            .padding(.horizontal, 30)
+            .padding(.bottom)
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                healthKitManager.refreshStatus()
             }
+        }
+        .onAppear {
+            hasAppeared = true
         }
     }
     
@@ -156,7 +178,7 @@ struct GuideView: View {
     // MARK: - Logic
     
     private var arePermissionsGranted: Bool {
-        let locationOK = locationManager.authorisationStatus == .authorizedWhenInUse || locationManager.authorisationStatus == .authorizedAlways
+        let locationOK = locationManager.authorisationStatus != .notDetermined
         let healthOK = healthKitManager.authorisationStatus == .sharingAuthorized
         return locationOK && healthOK
     }
@@ -166,6 +188,8 @@ struct GuideView: View {
 // MARK: - Helper Views
 
 struct RiskWarningView: View {
+    @State private var hasAppeared = false
+    
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "exclamationmark.triangle.fill")
@@ -177,7 +201,7 @@ struct RiskWarningView: View {
                     .font(.headline)
                     .fontWeight(.bold)
                 
-                Text("At high speeds, a loose phone can slip and get damaged. Please carry it firmly in a hip pocket or waistband.")
+                Text("At high speeds, a loose phone can slip and get damaged. Please carry it firmly.")
                     .font(.subheadline)
                     .foregroundStyle(.primary)
             }
@@ -185,6 +209,13 @@ struct RiskWarningView: View {
         .padding()
         .background(Color.orange.opacity(0.15))
         .cornerRadius(12)
+        .scaleEffect(hasAppeared ? 1.0 : 0.95)
+        .onAppear {
+            // A slight delay makes the pulse feel more intentional and separated
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.6).delay(0.7)) {
+                hasAppeared = true
+            }
+        }
     }
 }
 
@@ -211,7 +242,7 @@ struct PermissionGuideRow: View {
             Image(systemName: iconName)
                 .font(.title2).foregroundStyle(.white)
                 .frame(width: 44, height: 44)
-                .background(status.iconColor.gradient)
+                .background(.green.gradient)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             
             VStack(alignment: .leading) {
@@ -221,13 +252,13 @@ struct PermissionGuideRow: View {
             
             Spacer()
             
-            if status == .granted {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.title2).foregroundStyle(.green)
-            } else {
+            if status == .notDetermined {
                 Button("Grant", action: action)
                     .buttonStyle(.bordered)
                     .tint(.accentColor)
+            } else {
+                Image(systemName: status.iconName)
+                    .font(.title2).foregroundStyle(status.iconColour)
             }
         }
     }
@@ -238,13 +269,13 @@ struct PermissionGuideRow: View {
 
 struct GuideView_Previews: PreviewProvider {
     static var previews: some View {
-        GuideView(workoutType: .cycling, requestAuth: true, continueAction: {})
+        GuideView(workoutType: .cycling, requestAuth: true, continueAction: {}, cancelAction: {})
             .previewDisplayName("First Time Welcome")
         
-        GuideView(workoutType: .walking, requestAuth: false, continueAction: {})
+        GuideView(workoutType: .walking, requestAuth: false, continueAction: {}, cancelAction: {})
             .previewDisplayName("New Workout Type Welcome")
         
-        GuideView(workoutType: .running, requestAuth: false, continueAction: {})
+        GuideView(workoutType: .running, requestAuth: false, continueAction: {}, cancelAction: {})
             .previewDisplayName("Running Welcome")
     }
 }

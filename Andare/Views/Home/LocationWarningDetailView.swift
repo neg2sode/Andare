@@ -78,9 +78,11 @@ struct LocationWarningDetailView: View {
                         dismiss()
                     } label: {
                         Text("Enable in Settings")
+                            .font(.headline).fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
+                    .cornerRadius(16)
                     .controlSize(.large)
 
                     Button {
@@ -88,11 +90,13 @@ struct LocationWarningDetailView: View {
                         dismiss()
                     } label: {
                         Text("Don't Show Again")
+                            .font(.headline).fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
                     }
                     .controlSize(.large)
                 }
-                .padding()
+                .padding(.horizontal, 30)
+                .padding(.bottom)
                 .background(Color(.systemBackground))
             }
             .navigationTitle("Location Permission")

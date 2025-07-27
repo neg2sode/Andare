@@ -123,6 +123,12 @@ struct HomeView: View {
                         requestAuth: requestAuth,
                         continueAction: {
                             handleGuideCompletion(for: workoutType)
+                        },
+                        cancelAction: {
+                            withAnimation {
+                                sessionState = .idle
+                                isDrawerPresented = true
+                            }
                         }
                     )
                     .transition(.opacity.animation(.easeInOut))
@@ -154,18 +160,18 @@ struct HomeView: View {
                 WorkoutSummaryView(data: summaryData)
             }
             .onChange(of: rideSessionManager.locationAuthStatus) { oldStatus, newStatus in
-                // This handles starting the ride automatically after location permissions are granted.
-                if sessionState == .idle {
-                    if oldStatus == .notDetermined {
-                        switch newStatus {
-                        case .authorizedWhenInUse, .authorizedAlways:
+                if oldStatus == .notDetermined {
+                    switch newStatus {
+                    case .authorizedWhenInUse, .authorizedAlways:
+                        // This handles starting the ride automatically after location permissions are granted.
+                        if sessionState == .idle {
                             rideSessionManager.startRidePreparations()
                             proceedToCountdown()
-                        case .denied, .restricted:
-                            isShowingLocationWarning = true
-                        default:
-                            break
                         }
+                    case .denied, .restricted:
+                        isShowingLocationWarning = true
+                    default:
+                        break
                     }
                 }
             }
@@ -338,7 +344,7 @@ struct HomeView: View {
             return
         }
 
-        guard locationStatus == .authorizedWhenInUse || locationStatus == .authorizedAlways else {
+        if locationStatus == .notDetermined {
             rideSessionManager.locationManager.requestAuthorisation()
             return
         }

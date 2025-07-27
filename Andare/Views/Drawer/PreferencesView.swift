@@ -173,7 +173,7 @@ struct PermissionRow: View {
             Text(title)
             Spacer()
             Image(systemName: status.iconName)
-                .foregroundStyle(status.iconColor)
+                .foregroundStyle(status.iconColour)
         }
         .padding()
         .contentShape(Rectangle())
@@ -202,23 +202,23 @@ struct ProfileRow: View {
 
 // An enum to decouple the view from CoreLocation/HealthKit types
 enum PermissionStatus {
-    case granted, denied, warning, undetermined
+    case granted, denied, warning, notDetermined
     
     var iconName: String {
         switch self {
             case .granted: "checkmark.circle.fill"
             case .denied: "xmark.octagon.fill"
             case .warning: "exclamationmark.triangle.fill"
-            case .undetermined: "info.circle.fill"
+            case .notDetermined: "info.circle.fill"
         }
     }
     
-    var iconColor: Color {
+    var iconColour: Color {
         switch self {
             case .granted: .green
             case .denied: .red
             case .warning: .orange
-            case .undetermined: .gray
+            case .notDetermined: .gray
         }
     }
 }
@@ -229,7 +229,7 @@ extension CLAuthorizationStatus {
         switch self {
             case .authorizedAlways, .authorizedWhenInUse: .granted
             case .denied, .restricted: .warning
-            case .notDetermined: .undetermined
+            case .notDetermined: .notDetermined
             @unknown default: .warning
         }
     }
@@ -240,7 +240,7 @@ extension HKAuthorizationStatus {
         switch self {
             case .sharingAuthorized: .granted
             case .sharingDenied: .denied
-            case .notDetermined: .undetermined
+            case .notDetermined: .notDetermined
             @unknown default: .denied
         }
     }
