@@ -14,14 +14,15 @@ import CoreLocation
 extension WorkoutData {
     /// Creates a transient WorkoutData struct from a persistent WorkoutDataModel object.
     init(from model: WorkoutDataModel) {
-        // Map the CadenceSegmentModels back to CadenceSegments
         let segments = model.cadenceSegments.map { CadenceSegment(from: $0) }
+        let intents = model.notificationIntents.map { NotificationIntent(from: $0) }
         
         self.init(
             workoutType: model.workoutType,
             startTime: model.startTime,
             endTime: model.endTime,
             cadenceSegments: segments,
+            notificationIntents: intents,
             logMessages: model.logMessages,
             averageCadence: model.averageCadence,
             totalDistance: model.totalDistance,

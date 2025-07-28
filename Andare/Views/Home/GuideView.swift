@@ -52,12 +52,11 @@ struct GuideView: View {
     private var guidance: WorkoutGuidance {
         .forType(workoutType)
     }
-    
-    // This view manages its own permission state
-    @StateObject private var locationManager = LocationManager()
-    @StateObject private var healthKitManager = HealthKitManager()
-    
+
     @State private var hasAppeared = false
+    
+    @StateObject private var locationManager = LocationManager.shared
+    @StateObject private var healthKitManager = HealthKitManager.shared
     
     @Environment(\.scenePhase) private var scenePhase
 

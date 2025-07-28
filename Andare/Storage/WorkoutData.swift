@@ -14,6 +14,7 @@ struct WorkoutData: Identifiable, Equatable {
     let startTime: Date
     let endTime: Date
     let cadenceSegments: [CadenceSegment]
+    let notificationIntents: [NotificationIntent]
     let logMessages: [String]
     let averageCadence: Double
     let totalDistance: Double

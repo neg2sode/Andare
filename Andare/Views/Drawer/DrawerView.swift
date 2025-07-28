@@ -27,7 +27,7 @@ struct DrawerView: View {
                 Button(action: { isShowingPreferences = true }) {
                     Image(systemName: "gearshape.fill")
                         .imageScale(.large)
-                        .foregroundStyle(Color.accentColor) // Match the tint
+                        .foregroundStyle(Color.accentColor)
                 }
             }
             .padding(.horizontal)
@@ -72,7 +72,7 @@ struct DrawerView: View {
         .background(Color(.systemBackground))
         .sheet(isPresented: $isShowingPreferences) {
             PreferencesView()
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.fraction(0.7), .large])
                 .presentationDragIndicator(.hidden)
         }
     }

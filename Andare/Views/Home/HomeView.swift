@@ -14,8 +14,10 @@ struct HomeView: View {
     @StateObject private var rideSessionManager: RideSessionManager
     @StateObject private var drawerState = DrawerState()
     @StateObject private var pagingState: WorkoutPagingState
-    @StateObject private var healthKitManager = HealthKitManager()
-    @StateObject private var alertManager = AlertManager()
+    
+    @StateObject var alertManager = AlertManager.shared
+    @StateObject var locationManager = LocationManager.shared
+    @StateObject var healthKitManager = HealthKitManager.shared
     
     @State private var isDrawerPresented = false
     @State private var isShowingLocationWarning = false
@@ -43,6 +45,7 @@ struct HomeView: View {
     
     enum SessionState: Equatable {
         case idle
+        case awaitingPermission
         case showingGuide(workoutType: WorkoutType, requestAuth: Bool)
         case countingDown(Int)
         case starting
@@ -52,7 +55,7 @@ struct HomeView: View {
         
         static func == (lhs: SessionState, rhs: SessionState) -> Bool {
             switch (lhs, rhs) {
-            case (.idle, .idle), (.starting, .starting), (.active, .active), (.transitioning, .transitioning):
+            case (.idle, .idle), (.starting, .starting), (.active, .active), (.transitioning, .transitioning), (.awaitingPermission, .awaitingPermission):
                 return true
             case (.showingGuide(let lType, let lAuth), .showingGuide(let rType, let rAuth)):
                 return lType == rType && lAuth == rAuth
@@ -101,7 +104,7 @@ struct HomeView: View {
                 // The switch statement ensures only one view is shown at a time,
                 // based on the explicit `rideState`.
                 switch sessionState {
-                case .idle:
+                case .idle, .awaitingPermission:
                     idleView
                         .transition(.opacity.animation(.easeInOut(duration: 0.5)))
                 
@@ -164,12 +167,17 @@ struct HomeView: View {
                     switch newStatus {
                     case .authorizedWhenInUse, .authorizedAlways:
                         // This handles starting the ride automatically after location permissions are granted.
-                        if sessionState == .idle {
+                        if sessionState == .awaitingPermission {
                             rideSessionManager.startRidePreparations()
                             proceedToCountdown()
                         }
                     case .denied, .restricted:
-                        isShowingLocationWarning = true
+                        switch sessionState {
+                        case .showingGuide(_, true):
+                            isShowingLocationWarning = true
+                        default:
+                            break
+                        }
                     default:
                         break
                     }
@@ -323,7 +331,7 @@ struct HomeView: View {
     }
 
     private func startWorkoutSequence(for workoutType: WorkoutType) {
-        let locationStatus = rideSessionManager.locationAuthStatus
+        let locationStatus = locationManager.authorisationStatus
         
         if !hasShownGuide(for: workoutType) {
             if isFirstGuideEver || locationStatus == .notDetermined {
@@ -345,7 +353,8 @@ struct HomeView: View {
         }
 
         if locationStatus == .notDetermined {
-            rideSessionManager.locationManager.requestAuthorisation()
+            sessionState = .awaitingPermission
+            locationManager.requestAuthorisation()
             return
         }
         

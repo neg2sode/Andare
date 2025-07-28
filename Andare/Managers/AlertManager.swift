@@ -9,6 +9,8 @@ import SwiftUI
 import UIKit
 
 final class AlertManager: ObservableObject {
+    static let shared = AlertManager()
+    
     @Published var isPresenting: Bool = false
     @Published var title: String = ""
     @Published var message: String = ""

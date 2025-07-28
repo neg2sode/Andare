@@ -126,6 +126,18 @@ enum WorkoutType: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+enum NotificationType: String, Codable {
+    case lowCadenceAlert = "Low Cadence Alert"
+    case highCadenceAlert = "High Cadence Alert"
+    case pushingBike = "Consider Pushing Bike"
+    case finishedWorkout = "Finished Workout?"
+}
+
+enum NotificationFrequency: String, Codable, CaseIterable {
+    case normal = "Default"
+    case frequent = "Frequent"
+}
+
 struct WorkoutCadenceInfo {
     let range: (min: Double, max: Double)
     let threshold: (low: Double, high: Double)?

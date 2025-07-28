@@ -575,6 +575,7 @@ final class RideSessionManager: ObservableObject {
             startTime: startDate,
             endTime: endDate,
             cadenceSegments: self.cadenceSegments,
+            notificationIntents: [],
             logMessages: logMessages,
             averageCadence: self.averageCadence ?? 0.0,
             totalDistance: self.totalDistance,

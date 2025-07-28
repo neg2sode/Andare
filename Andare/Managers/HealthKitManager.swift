@@ -9,6 +9,8 @@ import Foundation
 import HealthKit
 
 final class HealthKitManager: ObservableObject {
+    static let shared = HealthKitManager()
+    
     @Published var authorisationStatus: HKAuthorizationStatus
     
     private let healthStore = HKHealthStore()

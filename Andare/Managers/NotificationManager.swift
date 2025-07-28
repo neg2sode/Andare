@@ -8,29 +8,27 @@
 import Foundation
 import UserNotifications // For local notifications
 
-enum NotificationType: String {
-    case lowCadenceAlert = "Low Cadence Alert"
-    case highCadenceAlert = "High Cadence Alert"
-    case pushingBike = "Consider Pushing Bike"
-    case finishedWorkout = "Finished Workout?"
-}
-
-final class NotificationManager {
+@MainActor
+final class NotificationManager: ObservableObject {
     static let shared = NotificationManager()
-
-    // Request permission on init -> needs to be changed in the future
-    init() {
+    
+    @Published private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
+    
+    func refreshStatus() {
         Task {
-            await requestAuthorisation()
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            authorizationStatus = settings.authorizationStatus
         }
     }
 
-    func requestAuthorisation() async -> Bool {
+    func requestAuthorisation() async {
         do {
             let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
-            return granted
+            print("Notification permission granted: \(granted)")
+            // After the user makes a choice, refresh the status to update the UI.
+            refreshStatus()
         } catch {
-            return false
+            print("Failed to request notification authorization: \(error)")
         }
     }
 

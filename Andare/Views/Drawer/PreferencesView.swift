@@ -6,23 +6,35 @@
 //
 
 import SwiftUI
+import TipKit
 import HealthKit
 import CoreLocation
+import UserNotifications
 
 struct PreferencesView: View {
     @Environment(\.dismiss) var dismiss
 
-    @StateObject private var locationManager = LocationManager()
-    @StateObject private var healthKitManager = HealthKitManager()
-    @StateObject private var alertManager = AlertManager()
-
-    // Re-introduce AppStorage to track "Don't show again" from LocationWarningDetailView
     @AppStorage("showLocationWarningPreference") private var showLocationWarningPreference: Bool = true
+    @AppStorage("realTimeNotificationsEnabled") private var realTimeNotificationsEnabled: Bool = false
+    @AppStorage("notificationFrequencyRawValue") private var notificationFrequencyRawValue: String = NotificationFrequency.normal.rawValue
     @AppStorage("userWeightKg") private var userWeightKg: Double = 70.0
     @AppStorage("userHeightCm") private var userHeightCm: Double = 170.0
 
     @State private var showingLocationWarningDetail = false
     @State private var healthKitProfileLinked = false
+    @State private var showFrequencyTip = false
+    
+    @StateObject private var locationManager = LocationManager.shared
+    @StateObject private var healthKitManager = HealthKitManager.shared
+    @StateObject private var alertManager = AlertManager.shared
+    @StateObject private var notificationManager = NotificationManager.shared
+    
+    private var frequencyBinding: Binding<NotificationFrequency> {
+        Binding(
+            get: { NotificationFrequency(rawValue: notificationFrequencyRawValue) ?? .normal },
+            set: { notificationFrequencyRawValue = $0.rawValue }
+        )
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -45,7 +57,7 @@ struct PreferencesView: View {
                         .font(.title)
                 }
             }
-            .padding(.top)
+            .padding(.top, 20)
             .padding(.bottom, 8)
             .padding(.horizontal)
             
@@ -53,13 +65,14 @@ struct PreferencesView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Permissions")
-                            .font(.headline)
+                            .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(.secondary)
                             .padding(.horizontal)
                             .textCase(nil)
                         
                         VStack(spacing: 0) {
+                            // location row
                             Button(action: handleLocationRowTap) {
                                 PermissionRow(title: "Location", status: locationManager.authorisationStatus.permissionStatus)
                             }
@@ -71,6 +84,13 @@ struct PreferencesView: View {
                             Button(action: handleWorkoutsRowTap) {
                                 PermissionRow(title: "Workouts", status: healthKitManager.authorisationStatus(for: HKObjectType.workoutType()).permissionStatus)
                             }
+                            
+                            Divider().padding(.leading)
+                            
+                            // notification row
+                            Button(action: handleNotificationsRowTap) {
+                                PermissionRow(title: "Notifications", status: notificationManager.authorizationStatus.permissionStatus)
+                            }
                         }
                         .buttonStyle(.plain) // Apply to all buttons within
                         .background(Color(.secondarySystemGroupedBackground))
@@ -81,7 +101,7 @@ struct PreferencesView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("Profile")
-                                .font(.headline)
+                                .font(.subheadline)
                                 .fontWeight(.medium)
                                 .foregroundStyle(.secondary)
                                 .textCase(nil)
@@ -94,9 +114,11 @@ struct PreferencesView: View {
                                     .foregroundStyle(.secondary)
                                 
                                 if healthKitProfileLinked {
-                                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.green)
                                 } else {
-                                    Image(systemName: "info.circle.fill").foregroundStyle(.gray)
+                                    Image(systemName: "info.circle.fill")
+                                        .foregroundStyle(.gray)
                                 }
                             }
                             .padding(.horizontal)
@@ -111,6 +133,51 @@ struct PreferencesView: View {
                         .background(Color(.secondarySystemGroupedBackground))
                         .cornerRadius(12)
                         .padding(.horizontal)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Notifications")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.secondary)
+                            .textCase(nil)
+                            .padding(.horizontal)
+                        
+                        VStack(spacing: 0) {
+                            Toggle("Enable Real-Time Alerts", isOn: $realTimeNotificationsEnabled)
+                                .padding(.horizontal)
+                                .padding(.vertical, 13)
+                            
+                            if realTimeNotificationsEnabled {
+                                Divider().padding(.leading)
+                                HStack {
+                                    HStack(spacing: 8) {
+                                        Text("Frequency")
+                                        Button {
+                                            showFrequencyTip.toggle() // Toggle the popover
+                                        } label: {
+                                            Image(systemName: "info.circle.fill")
+                                                .foregroundStyle(.gray)
+                                        }
+                                        // 4. ATTACH THE TIPKIT POPOVER
+                                        .popover(isPresented: $showFrequencyTip, arrowEdge: .bottom) {
+                                            TipView(NotificationFrequencyTip())
+                                        }
+                                    }
+                                    Spacer()
+                                    // 5. USE THE CUSTOM BINDING for the Picker.
+                                    Picker("Frequency", selection: frequencyBinding) {
+                                        Text("Frequent").tag(NotificationFrequency.frequent)
+                                        Text("Default").tag(NotificationFrequency.normal)
+                                    }
+                                    .pickerStyle(.segmented).frame(maxWidth: 160)
+                                }
+                                .padding(.horizontal)
+                                .padding(.vertical, 13)
+                            }
+                        }
+                        .background(Color(.secondarySystemGroupedBackground)).cornerRadius(12).padding(.horizontal)
+                        .animation(.easeInOut(duration: 0.2), value: realTimeNotificationsEnabled)
                     }
                 }
                 .padding(.vertical)
@@ -131,6 +198,7 @@ struct PreferencesView: View {
         }
         .onAppear {
             self.healthKitProfileLinked = healthKitManager.profileCharacteristicsAuthorised()
+            notificationManager.refreshStatus()
         }
     }
 
@@ -147,9 +215,8 @@ struct PreferencesView: View {
     }
     
     private func handleWorkoutsRowTap() {
-        let status = healthKitManager.authorisationStatus(
-            for: HKObjectType.workoutType()
-        )
+        let status = healthKitManager.authorisationStatus(for: HKObjectType.workoutType())
+        
         if status != .sharingAuthorized {
             alertManager.showAlert(
                 title: "How to Grant Workouts Permission",
@@ -159,6 +226,19 @@ struct PreferencesView: View {
                     in Settings → Privacy & Security → Health → Andare.
                     """
             )
+        }
+    }
+    
+    private func handleNotificationsRowTap() {
+        switch notificationManager.authorizationStatus {
+        case .notDetermined:
+            // If permissions haven't been asked for, request them.
+            Task {
+                await notificationManager.requestAuthorisation()
+            }
+        default:
+            // If permissions are already granted or denied, go to the Settings app.
+            UIApplication.openNotificationSettings()
         }
     }
 }
@@ -175,7 +255,8 @@ struct PermissionRow: View {
             Image(systemName: status.iconName)
                 .foregroundStyle(status.iconColour)
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.vertical, 13)
         .contentShape(Rectangle())
     }
 }
@@ -194,7 +275,9 @@ struct ProfileRow: View {
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.vertical, 13)
+        .contentShape(Rectangle())
     }
 }
 
@@ -242,6 +325,21 @@ extension HKAuthorizationStatus {
             case .sharingDenied: .denied
             case .notDetermined: .notDetermined
             @unknown default: .denied
+        }
+    }
+}
+
+extension UNAuthorizationStatus {
+    var permissionStatus: PermissionStatus {
+        switch self {
+        case .authorized, .provisional, .ephemeral:
+            return .granted
+        case .denied:
+            return .denied
+        case .notDetermined:
+            return .notDetermined
+        @unknown default:
+            return .denied
         }
     }
 }

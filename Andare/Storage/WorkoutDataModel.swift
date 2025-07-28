@@ -36,6 +36,9 @@ final class WorkoutDataModel {
     @Relationship(deleteRule: .cascade, inverse: \CadenceSegmentModel.workout)
     var cadenceSegments: [CadenceSegmentModel]
     
+    @Relationship(deleteRule: .cascade, inverse: \NotificationIntentModel.workout)
+    var notificationIntents: [NotificationIntentModel]
+    
     var logMessages: [String] {
         get {
             (try? JSONDecoder().decode([String].self, from: logMessagesData)) ?? []
@@ -46,7 +49,7 @@ final class WorkoutDataModel {
     }
     
     // The designated initializer now sets 'var' properties. Its structure is unchanged.
-    init(id: UUID, managementState: WorkoutManagementState, mapDisplayContext: MapDisplayContext, workoutType: WorkoutType, startTime: Date, endTime: Date, logMessages: [String], averageCadence: Double, totalDistance: Double, averageSpeed: Double, maxSpeed: Double, elevationGain: Double, activeCalories: Double, totalCalories: Double, cadenceSegments: [CadenceSegmentModel]) {
+    init(id: UUID, managementState: WorkoutManagementState, mapDisplayContext: MapDisplayContext, workoutType: WorkoutType, startTime: Date, endTime: Date, logMessages: [String], averageCadence: Double, totalDistance: Double, averageSpeed: Double, maxSpeed: Double, elevationGain: Double, activeCalories: Double, totalCalories: Double, cadenceSegments: [CadenceSegmentModel], notificationIntents: [NotificationIntentModel]) {
         self.id = id
         self.managementState = managementState.rawValue
         self.mapDisplayContext = mapDisplayContext.rawValue
@@ -62,6 +65,7 @@ final class WorkoutDataModel {
         self.activeCalories = activeCalories
         self.totalCalories = totalCalories
         self.cadenceSegments = cadenceSegments
+        self.notificationIntents = notificationIntents
     }
     
     // MARK: - Computed Properties (No changes needed here)
@@ -85,12 +89,19 @@ final class WorkoutDataModel {
 
 extension WorkoutDataModel {
     convenience init(from data: WorkoutData) {
-        // ... this implementation remains exactly the same as before.
         let segmentModels = data.cadenceSegments.map { segment -> CadenceSegmentModel in
             let locationPoints = segment.locations.map { location in
                 LocationPoint(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude, altitude: location.altitude, horizontalAccuracy: location.horizontalAccuracy, timestamp: location.timestamp)
             }
             return CadenceSegmentModel(timestamp: segment.timestamp, cadence: segment.cadence, zone: segment.zone, locations: locationPoints, speed: segment.speed, baroAltitude: segment.baroAltitude, gpsAltitude: segment.gpsAltitude, distance: segment.distance)
+        }
+        
+        let intentModels = data.notificationIntents.map { intent -> NotificationIntentModel in
+            return NotificationIntentModel(
+                endDate: intent.endDate,
+                type: intent.type,
+                duration: intent.duration
+            )
         }
         
         self.init(
@@ -108,7 +119,8 @@ extension WorkoutDataModel {
             elevationGain: data.elevationGain,
             activeCalories: data.activeCalories,
             totalCalories: data.totalCalories,
-            cadenceSegments: segmentModels
+            cadenceSegments: segmentModels,
+            notificationIntents: intentModels
         )
     }
 }

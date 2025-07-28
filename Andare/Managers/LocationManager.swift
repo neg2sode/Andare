@@ -11,6 +11,8 @@ import Combine // For PassthroughSubject
 
 // Needs to inherit from NSObject to be CLLocationManagerDelegate
 final class LocationManager: NSObject, ObservableObject {
+    static let shared = LocationManager()
+    
     private let locationManager = CLLocationManager()
 
     // --- Published State ---
