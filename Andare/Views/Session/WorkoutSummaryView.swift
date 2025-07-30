@@ -75,6 +75,7 @@ struct WorkoutSummaryView: View {
                 scrollableContent
                 floatingDoneButton
             }
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle(StatsFormatter.formatSummaryTitle(data.startTime, data.workoutType))
             .navigationBarTitleDisplayMode(.inline)
         }
@@ -141,10 +142,9 @@ struct WorkoutSummaryView: View {
     
     // MARK: - Extracted View Sections
     
-    // Updated Summary Stats using a Grid for better layout
     private var summaryStatsSectionGrid: some View {
-        VStack(alignment: .leading, spacing: 15) { // Overall container for title + grid
-            Text("Workout Summary") // Title for the section as seen in the image
+        VStack(alignment: .leading, spacing: 20) { // Overall container for title + grid
+            Text("Workout Summary")
                 .font(.title2)
                 .fontWeight(.bold)
 
@@ -169,13 +169,12 @@ struct WorkoutSummaryView: View {
                     statsView(label: "Total Kilocalories", stats: StatsFormatter.formatEnergyBurned(data.totalCalories))
                 }
             }
-            .padding(20)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(UIColor.secondarySystemGroupedBackground))
-            )
         }
-        .padding(.bottom) // Original padding for the whole section
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(UIColor.secondarySystemGroupedBackground))
+        )
     }
     
     // Helper for individual stat display
@@ -186,12 +185,12 @@ struct WorkoutSummaryView: View {
                 .foregroundStyle(.primary)
             HStack(alignment: .lastTextBaseline, spacing: 0) {
                 Text(stats.value)
-                    .font(.system(size: 28, weight: .semibold, design: .rounded))
+                    .font(.system(size: 28, weight: .medium, design: .rounded))
                     .foregroundStyle(stats.colour) // Apply specific color to the value
                     .lineLimit(1) // Ensure the value stays on one line
                     .minimumScaleFactor(0.7) // Allow text to shrink if it's too long to fit
                 Text(stats.unit)
-                    .font(.system(size: 22, weight: .semibold, design: .rounded))
+                    .font(.system(size: 22, weight: .medium, design: .rounded))
                     .foregroundStyle(stats.colour)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
@@ -202,7 +201,7 @@ struct WorkoutSummaryView: View {
     
     // 2. Chart Section
     private var chartSection: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 20) {
             Text("Cadence Over Time")
                 .font(.title2)
                 .fontWeight(.bold)
@@ -210,7 +209,7 @@ struct WorkoutSummaryView: View {
             if data.cadenceSegments.isEmpty {
                 Text("No cadence data recorded.")
                     .foregroundStyle(.secondary)
-                    .padding(.top, 5)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 Chart {
                     ForEach(data.cadenceSegments) { segment in
@@ -231,9 +230,8 @@ struct WorkoutSummaryView: View {
                         LegendItem(colour: Color.highCadenceColour, text: CadenceZone.high.rawValue)
                         LegendItem(colour: Color.gray, text: CadenceZone.zero.rawValue)
                     }
-                    .padding(.top, 5)
                  }
-                .chartYScale(domain: 0...max(120, (data.cadenceSegments.map{$0.cadence}.max() ?? 0) + 20))
+                .chartYScale(domain: 0...data.workoutType.getInfo().range.max)
                 .chartXAxis {
                     AxisMarks(preset: .automatic, values: .automatic(desiredCount: 5)) { value in
                         AxisGridLine()
@@ -256,57 +254,59 @@ struct WorkoutSummaryView: View {
                     }
                 }
                 .frame(height: 250)
-                .padding(.top, 5)
             }
         }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(UIColor.secondarySystemGroupedBackground))
+        )
     }
     
     private var mapSection: some View {
         VStack(alignment: .leading) {
             switch data.mapDisplayContext {
             case .full:
-                HStack {
+                VStack(alignment: .leading, spacing: 20) {
                     Text("Route Map")
                         .font(.title2)
                         .fontWeight(.bold)
-                }
-                
-                if let polyline = self.routePolyline,
-                   let startCoord = self.coordinates.first,
-                   let endCoord = self.coordinates.last {
-                    Map(initialPosition: mapCameraPosition, interactionModes: []) {
-                        Self.routeMapContent(polyline: polyline, start: startCoord, end: endCoord)
+                    
+                    if let polyline = self.routePolyline,
+                       let startCoord = self.coordinates.first,
+                       let endCoord = self.coordinates.last {
+                        Map(initialPosition: mapCameraPosition, interactionModes: []) {
+                            Self.routeMapContent(polyline: polyline, start: startCoord, end: endCoord)
+                        }
+                        .mapControlVisibility(.hidden) // Keep inline map clean
+                        .frame(height: 200)
+                        .cornerRadius(10)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            isShowingFullMap = true
+                        }
+                    } else {
+                        Text("No route data recorded.")
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .mapControlVisibility(.hidden) // Keep inline map clean
-                    .frame(height: 200)
-                    .cornerRadius(10)
-                    .padding(.top, 5)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        isShowingFullMap = true
-                    }
-                } else {
-                    Text("No route data recorded.")
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 5)
                 }
+                .padding(20)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color(UIColor.secondarySystemGroupedBackground))
+                )
             
             case .prompt:
-                HStack {
-                    Text("Route Map")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                }
-                
                 // Message for reduced accuracy (existing code)
                 Text("Route map is not available because Precise Location is turned off for Andare. You can enable it in Settings > Privacy & Security > Location Services > Andare.")
                     .font(.footnote)
                     .foregroundStyle(.orange)
-                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 12)
                     .padding(.horizontal)
                     .background(Color.orange.opacity(0.1))
-                    .cornerRadius(8)
-                    .padding(.top, 5)
+                    .cornerRadius(16)
             
             case .hidden:
                 EmptyView()

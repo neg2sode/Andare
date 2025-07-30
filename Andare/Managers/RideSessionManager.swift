@@ -159,18 +159,25 @@ final class RideSessionManager: ObservableObject {
 
         if let builder = self.workoutBuilder {
             let endDate = Date()
+            
             do {
-                await self.saveSummaryStats(to: builder)
                 await self.stopLiveActivity()
+                
+                if let startDate = builder.startDate {
+                    let duration = endDate.timeIntervalSince(startDate)
+                    let minDuration = 60.0
+                    
+                    if duration > minDuration && !self.cadenceSamples.isEmpty {
+                        await self.saveSummaryStats(to: builder)
+                        
+                        if workoutType == .cycling {
+                            try await healthStore.save(self.cadenceSamples)
+                        }
+                    }
+                }
                 
                 try await builder.endCollection(at: endDate)
                 try await builder.finishWorkout()
-                
-                if workoutType == .cycling {
-                    if !self.cadenceSamples.isEmpty {
-                        try await healthStore.save(self.cadenceSamples)
-                    }
-                }
             } catch {
                 logDebug("A failure occurred during HealthKit finalization: \(error.localizedDescription)")
                 builder.discardWorkout() // We still continue, because we want to show the summary to the user.
@@ -560,13 +567,7 @@ final class RideSessionManager: ObservableObject {
 
     private func finaliseLocalData(context: ModelContext) -> WorkoutData? {
         guard let startDate = workoutBuilder?.startDate else { return nil }
-        let endDate = cadenceSegments.last?.timestamp ?? Date()
-        
-        /*
-        let duration = endDate.timeIntervalSince(startDate)
-        let minDuration = 30.0 // seconds
-        if duration < minDuration { return nil }
-        */
+        let endDate = Date()
         
         let logMessages = self.logEntries.map { "[\($0.formattedTimestamp)] \($0.message)" }
 
