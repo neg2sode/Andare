@@ -15,19 +15,21 @@ struct PreferencesView: View {
     @Environment(\.dismiss) var dismiss
 
     @AppStorage("showLocationWarningPreference") private var showLocationWarningPreference: Bool = true
-    @AppStorage("realTimeNotificationsEnabled") private var realTimeNotificationsEnabled: Bool = false
+    @AppStorage("realTimeAlertsEnabled") private var realTimeAlertsEnabled: Bool = false
+    @AppStorage("finishWorkoutAlertEnabled") private var finishWorkoutAlertEnabled: Bool = false
     @AppStorage("notificationFrequencyRawValue") private var notificationFrequencyRawValue: String = NotificationFrequency.normal.rawValue
     @AppStorage("userWeightKg") private var userWeightKg: Double = 70.0
     @AppStorage("userHeightCm") private var userHeightCm: Double = 170.0
 
     @State private var showingLocationWarningDetail = false
     @State private var healthKitProfileLinked = false
-    @State private var showFrequencyTip = false
     
     @StateObject private var locationManager = LocationManager.shared
     @StateObject private var healthKitManager = HealthKitManager.shared
     @StateObject private var alertManager = AlertManager.shared
     @StateObject private var notificationManager = NotificationManager.shared
+    
+    private let frequencyTip = NotificationFrequencyTip()
     
     private var frequencyBinding: Binding<NotificationFrequency> {
         Binding(
@@ -63,122 +65,9 @@ struct PreferencesView: View {
             
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Permissions")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal)
-                            .textCase(nil)
-                        
-                        VStack(spacing: 0) {
-                            // location row
-                            Button(action: handleLocationRowTap) {
-                                PermissionRow(title: "Location", status: locationManager.authorisationStatus.permissionStatus)
-                            }
-                            .sheet(isPresented: $showingLocationWarningDetail) { LocationWarningDetailView() }
-                            
-                            Divider().padding(.leading)
-                            
-                            // Workouts Row
-                            Button(action: handleWorkoutsRowTap) {
-                                PermissionRow(title: "Workouts", status: healthKitManager.authorisationStatus(for: HKObjectType.workoutType()).permissionStatus)
-                            }
-                            
-                            Divider().padding(.leading)
-                            
-                            // notification row
-                            Button(action: handleNotificationsRowTap) {
-                                PermissionRow(title: "Notifications", status: notificationManager.authorizationStatus.permissionStatus)
-                            }
-                        }
-                        .buttonStyle(.plain) // Apply to all buttons within
-                        .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
-                        .padding(.horizontal)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Profile")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundStyle(.secondary)
-                                .textCase(nil)
-                            
-                            Spacer()
-                            
-                            HStack(spacing: 4) {
-                                Text("HealthKit")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                
-                                if healthKitProfileLinked {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.green)
-                                } else {
-                                    Image(systemName: "info.circle.fill")
-                                        .foregroundStyle(.gray)
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                        .padding(.horizontal)
-                        
-                        VStack(spacing: 0) {
-                            ProfileRow(title: "Body Weight (kg)", value: $userWeightKg, formatter: .decimalFormatter)
-                            Divider().padding(.leading)
-                            ProfileRow(title: "Height (cm)", value: $userHeightCm, formatter: .decimalFormatter)
-                        }
-                        .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
-                        .padding(.horizontal)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Notifications")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.secondary)
-                            .textCase(nil)
-                            .padding(.horizontal)
-                        
-                        VStack(spacing: 0) {
-                            Toggle("Enable Real-Time Alerts", isOn: $realTimeNotificationsEnabled)
-                                .padding(.horizontal)
-                                .padding(.vertical, 13)
-                            
-                            if realTimeNotificationsEnabled {
-                                Divider().padding(.leading)
-                                HStack {
-                                    HStack(spacing: 8) {
-                                        Text("Frequency")
-                                        Button {
-                                            showFrequencyTip.toggle() // Toggle the popover
-                                        } label: {
-                                            Image(systemName: "info.circle.fill")
-                                                .foregroundStyle(.gray)
-                                        }
-                                        // 4. ATTACH THE TIPKIT POPOVER
-                                        .popover(isPresented: $showFrequencyTip, arrowEdge: .bottom) {
-                                            TipView(NotificationFrequencyTip())
-                                        }
-                                    }
-                                    Spacer()
-                                    // 5. USE THE CUSTOM BINDING for the Picker.
-                                    Picker("Frequency", selection: frequencyBinding) {
-                                        Text("Frequent").tag(NotificationFrequency.frequent)
-                                        Text("Default").tag(NotificationFrequency.normal)
-                                    }
-                                    .pickerStyle(.segmented).frame(maxWidth: 160)
-                                }
-                                .padding(.horizontal)
-                                .padding(.vertical, 13)
-                            }
-                        }
-                        .background(Color(.secondarySystemGroupedBackground)).cornerRadius(12).padding(.horizontal)
-                        .animation(.easeInOut(duration: 0.2), value: realTimeNotificationsEnabled)
-                    }
+                    permissionsSection
+                    profileSection
+                    notificationSection
                 }
                 .padding(.vertical)
             }
@@ -199,6 +88,126 @@ struct PreferencesView: View {
         .onAppear {
             self.healthKitProfileLinked = healthKitManager.profileCharacteristicsAuthorised()
             notificationManager.refreshStatus()
+        }
+    }
+    
+    private var permissionsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Permissions")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal)
+                .textCase(nil)
+            
+            VStack(spacing: 0) {
+                // location row
+                Button(action: handleLocationRowTap) {
+                    PermissionRow(title: "Location", status: locationManager.authorisationStatus.permissionStatus)
+                }
+                .sheet(isPresented: $showingLocationWarningDetail) { LocationWarningDetailView() }
+                
+                Divider().padding(.leading)
+                
+                // Workouts Row
+                Button(action: handleWorkoutsRowTap) {
+                    PermissionRow(title: "Workouts", status: healthKitManager.authorisationStatus(for: HKObjectType.workoutType()).permissionStatus)
+                }
+                
+                Divider().padding(.leading)
+                
+                // notification row
+                Button(action: handleNotificationsRowTap) {
+                    PermissionRow(title: "Notifications", status: notificationManager.authorizationStatus.permissionStatus)
+                }
+            }
+            .buttonStyle(.plain) // Apply to all buttons within
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(12)
+            .padding(.horizontal)
+        }
+    }
+    
+    private var profileSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Profile")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+                    .textCase(nil)
+                
+                Spacer()
+                
+                HStack(spacing: 4) {
+                    Text("HealthKit")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    if healthKitProfileLinked {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                    } else {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundStyle(.gray)
+                    }
+                }
+                .padding(.horizontal)
+            }
+            .padding(.horizontal)
+            
+            VStack(spacing: 0) {
+                ProfileRow(title: "Body Weight (kg)", value: $userWeightKg, formatter: .decimalFormatter)
+                Divider().padding(.leading)
+                ProfileRow(title: "Height (cm)", value: $userHeightCm, formatter: .decimalFormatter)
+            }
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(12)
+            .padding(.horizontal)
+        }
+    }
+    
+    private var notificationSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Notifications")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(.secondary)
+                .textCase(nil)
+                .padding(.horizontal)
+            
+            VStack(spacing: 0) {
+                Toggle("Finish Workout Alert", isOn: $finishWorkoutAlertEnabled)
+                    .padding(.horizontal)
+                    .padding(.vertical, 13)
+                
+                Divider().padding(.leading)
+                
+                Toggle("Real-Time Alerts", isOn: $realTimeAlertsEnabled)
+                    .padding(.horizontal)
+                    .padding(.vertical, 13)
+                
+                if realTimeAlertsEnabled {
+                    Divider().padding(.leading)
+                    HStack {
+                        HStack(spacing: 8) {
+                            Text("Frequency")
+                                .popoverTip(frequencyTip)
+                        }
+                        Spacer()
+                        // 5. USE THE CUSTOM BINDING for the Picker.
+                        Picker("Frequency", selection: frequencyBinding) {
+                            Text("High").tag(NotificationFrequency.high)
+                            Text("Default").tag(NotificationFrequency.normal)
+                        }
+                        .pickerStyle(.segmented).frame(maxWidth: 160)
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 13)
+                }
+            }
+            .background(Color(.secondarySystemGroupedBackground)).cornerRadius(12).padding(.horizontal)
+            .animation(.easeInOut(duration: 0.2), value: realTimeAlertsEnabled)
         }
     }
 

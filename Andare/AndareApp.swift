@@ -32,7 +32,6 @@ struct AndareApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // We'll replace the old ContentView with our new TabView structure
             HomeView()
         }
         .modelContainer(for: [WorkoutDataModel.self, CadenceSegmentModel.self])

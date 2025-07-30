@@ -9,14 +9,14 @@ import TipKit
 
 struct NotificationFrequencyTip: Tip {
     var title: Text {
-        Text("Notification Frequency")
+        Text("Use High Frequency Cautiously")
     }
     
     var message: Text? {
-        Text("By default, Andare checks for alerts every ~4 minutes. If you switch to frequent, this interval is shortened to ~80 seconds.")
+        Text("By default, Andare checks for alerts every ~4 minutes. If you switch to high, this interval is shortened to ~80 seconds, which may interrupt your workout.")
     }
     
     var image: Image? {
-        Image(systemName: "timer")
+        Image(systemName: "gauge.with.needle")
     }
 }

@@ -135,7 +135,7 @@ enum NotificationType: String, Codable {
 
 enum NotificationFrequency: String, Codable, CaseIterable {
     case normal = "Default"
-    case frequent = "Frequent"
+    case high = "High"
 }
 
 struct WorkoutCadenceInfo {
