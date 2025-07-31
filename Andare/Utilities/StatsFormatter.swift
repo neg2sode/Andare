@@ -67,17 +67,19 @@ struct StatsFormatter {
     }
 
     // Formatter for optional cadence, used by StatsOverlayView
-    static func formatCadence(_ cadence: Double?) -> FormattedStats {
+    static func formatCadence(_ cadence: Double?, _ workoutType: WorkoutType) -> FormattedStats {
         guard let validCadence = cadence else {
-            return FormattedStats(value: "--", unit: "RPM", colour: Color.cadenceColour)
+            let unit = workoutType == .cycling ? "RPM" : "SPM"
+            return FormattedStats(value: "--", unit: unit, colour: Color.cadenceColour)
         }
-        return formatCadence(validCadence) // Call non-optional version
+        return formatCadence(validCadence, workoutType) // Call non-optional version
     }
     
     // Formatter for non-optional cadence, used by RideSummaryView
-    static func formatCadence(_ cadence: Double) -> FormattedStats {
+    static func formatCadence(_ cadence: Double, _ workoutType: WorkoutType) -> FormattedStats {
         let value = NumberFormatter.integerFormatter.string(from: NSNumber(value: cadence.rounded())) ?? "0"
-        return FormattedStats(value: value, unit: "RPM", colour: Color.cadenceColour)
+        let unit = workoutType == .cycling ? "RPM" : "SPM"
+        return FormattedStats(value: value, unit: unit, colour: Color.cadenceColour)
     }
     
     // helper for formatting dates, can be used by any view

@@ -40,23 +40,29 @@ struct ArticleDetailView: View {
     private func articleSpecificContent() -> some View {
         // Main container for all sections within the article
         // Use this VStack's spacing to control the gap BETWEEN major sections
-        VStack(alignment: .leading, spacing: 30) { // e.g., 25 points between sections
-
+        VStack(alignment: .leading, spacing: 25) { // e.g., 25 points between sections
+            Text(article.title)
+                .font(.largeTitle.weight(.bold))
+            
             switch article.title {
-            case "Understanding Cycling Cadence":
+            case "Understanding Cadence":
 
                 // Section 1: What is Cadence?
                 VStack(alignment: .leading, spacing: 8) { // Use this spacing for within the section (title <-> body)
                     Text("What is Cadence?")
-                        .font(.largeTitle.weight(.bold)) // Make subtitle slightly bolder
-                    Text("Cadence is simply your pedaling rate, measured in revolutions per minute (RPM). Think of it like the rhythm or speed of your legs spinning.")
+                        .font(.title2.weight(.bold)) // Make subtitle slightly bolder
+                    Text("Cadence is the rhythm of your movement, measured in steps (SPM) or revolutions (RPM) per minute. It's the tempo of your workout.")
                 } // End Section 1
+                
+                // TODO: Placeholder for the "Efficiency Curve" chart
+                // We can add a custom, hardcoded chart view here later.
+                // EfficiencyCurveChartView()
 
                 // Section 2: Why 70-90 RPM?
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Why is 70-90 RPM Often Recommended?")
+                    Text("The Efficiency Sweet Spot")
                         .font(.title2.weight(.bold))
-                    Text("For casual cycling, this range often represents a sweet spot. It allows for efficient power transfer without putting excessive strain on joints (like knees) or requiring overly rapid, less controlled leg movements.")
+                    Text("For any given speed, there's an optimal cadence that minimizes oxygen consumption and muscular fatigue. This 'sweet spot' is different for everyone and for each activity.")
                 } // End Section 2
 
                 // Section 3: Finding Your Cadence
@@ -67,27 +73,30 @@ struct ArticleDetailView: View {
                 } // End Section 3
 
 
-            case "Knee Pain and Cycling":
+            case "Cadence and Joint Health":
 
                 // Section 1: Knee Strain Connection
                  VStack(alignment: .leading, spacing: 8) {
                     Text("The Knee Strain Connection")
-                        .font(.largeTitle.weight(.bold))
-                    Text("Pushing hard gears at a very low cadence (e.g., below 60 RPM) requires significant force from your leg muscles with each pedal stroke. This force translates to high pressure on your knee joint, particularly the patellofemoral joint (under the kneecap).")
+                        .font(.title2.weight(.bold))
+                    Text("Every step or pedal stroke places a force on your joints, especially your knees and ankles. Pushing hard gears at a very low cadence (below 60 RPM) requires significant force from your leg muscles with each pedal stroke. This force translates to high pressure on your knee joint.")
                 } // End Section 1
+                
+                // TODO: Placeholder for the "Joint Stress vs. Cadence" chart
+                // JointStressChartView()
 
                 // Section 2: How Higher Cadence Helps
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("How Higher Cadence Helps")
+                    Text("The Benefit of a Quicker Tempo")
                         .font(.title2.weight(.bold))
-                    Text("Spinning at a higher cadence (e.g., 70+ RPM) generally means using easier gears. While your legs move faster, the force required for each individual stroke is lower. This reduces the peak stress on your knees, making cycling much gentler on the joints.")
+                    Text("By increasing your cadence slightly, you reduce the force of each individual movement, which can significantly lower the overall stress on your knees and hips over the course of a workout.")
                 } // End Section 2
 
                  // Section 3: Listen to Your Body
                  VStack(alignment: .leading, spacing: 8) {
                     Text("Listen to Your Body")
                          .font(.title2.weight(.bold))
-                     Text("While cadence is important, proper bike fit and listening to any pain signals are crucial. If you experience knee pain, consult a professional.")
+                     Text("While cadence is important, proper form and listening to any pain signals are crucial. If you experience persistent joint pain, it's always best to consult a professional.")
                 } // End Section 3
 
 
@@ -95,8 +104,6 @@ struct ArticleDetailView: View {
                 Text("Article content coming soon.")
             }
         }
-        // Add padding around the entire block of sections if needed,
-        // but the ScrollView in the parent already has .padding(.horizontal)
-        // .padding(.vertical) // Add vertical padding if the top/bottom feel too close to edges
+        .padding(.bottom, 30)
     }
 }

@@ -38,9 +38,7 @@ struct DrawerView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     RecentWorkoutsView(isExpanded: $workoutsExpanded)
-
                     ArticlesView()
-                    
                     ContactMeView()
                 }
             }
@@ -69,7 +67,7 @@ struct DrawerView: View {
                 .transition(.opacity.animation(.easeInOut))
             }
         }
-        .background(Color(.systemBackground))
+        .background(Color(.systemGroupedBackground))
         .sheet(isPresented: $isShowingPreferences) {
             PreferencesView()
                 .presentationDetents([.fraction(0.7), .large])

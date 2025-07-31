@@ -80,68 +80,15 @@ struct RecentWorkoutsView: View {
     }
 
     var body: some View {
-        VStack(spacing: 4) {
-            HStack {
-                Text(workoutsHeaderTitle)
-                    .font(.title)
-                    .fontWeight(.bold)
-                Spacer()
-            }
+        VStack(alignment: .leading, spacing: 4) {
+            Text(workoutsHeaderTitle)
+                .font(.title)
+                .fontWeight(.bold)
             
             if workoutsInLastWeek.isEmpty {
-                ContentUnavailableView("No Workouts Yet This Week", systemImage: "figure.run.circle")
-                    .padding(.vertical)
-                    .transition(.opacity)
+                emptyStateView
             } else {
-                VStack(spacing: 8) {
-                    List {
-                        ForEach(workoutsToShow) { workout in
-                            WorkoutThumbnailCardView(workout: workout)
-                                .onTapGesture {
-                                    self.selectedWorkoutData = WorkoutData(from: workout)
-                                }
-                                .contextMenu {
-                                    contextMenuButtons(for: workout)
-                                }
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        updateWorkout(workout, to: .hidden)
-                                    } label: {
-                                        Label("Hide", systemImage: "eye.slash.fill")
-                                    }
-                                    .tint(.blue) // Use a distinct color for Hide
-                                }
-                                .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                    Button {
-                                        self.workoutToDelete = workout
-                                        self.isShowingDeleteConfirm = true
-                                    } label: {
-                                        Label("Delete", systemImage: "trash.fill")
-                                    }
-                                    .tint(.red)
-                                }
-                                .listRowInsets(EdgeInsets())
-                                .listRowSeparator(.hidden)
-                                .padding(.horizontal, 1)
-                                .padding(.vertical, 4)
-                        }
-                    }
-                    .listStyle(.plain)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: workoutsToShow)
-                    .frame(height: rowHeight * CGFloat(workoutsToShow.count))
-                    .scrollDisabled(true)
-                    
-                    if shouldShowMoreButton {
-                        Button("Show More") {
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                isExpanded = true
-                            }
-                        }
-                        .fontWeight(.semibold)
-                        .contentShape(Rectangle())
-                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                    }
-                }
+                workoutListView
             }
         }
         .padding(.horizontal)
@@ -161,6 +108,65 @@ struct RecentWorkoutsView: View {
             Button("Cancel", role: .cancel) { }
         } message: { workout in
             Text("Do you want to delete this workout record? This will affect your summaries and cannot be undone.")
+        }
+    }
+    
+    private var emptyStateView: some View {
+        ContentUnavailableView("No Workouts Yet This Week", systemImage: "figure.run.circle")
+            .padding(.vertical)
+            .transition(.opacity)
+    }
+    
+    private var workoutListView: some View {
+        VStack(spacing: 8) {
+            List {
+                ForEach(workoutsToShow) { workout in
+                    WorkoutThumbnailCardView(workout: workout)
+                        .onTapGesture {
+                            self.selectedWorkoutData = WorkoutData(from: workout)
+                        }
+                        .contextMenu {
+                            contextMenuButtons(for: workout)
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                updateWorkout(workout, to: .hidden)
+                            } label: {
+                                Label("Hide", systemImage: "eye.slash.fill")
+                            }
+                            .tint(.blue) // Use a distinct color for Hide
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                            Button {
+                                self.workoutToDelete = workout
+                                self.isShowingDeleteConfirm = true
+                            } label: {
+                                Label("Delete", systemImage: "trash.fill")
+                            }
+                            .tint(.red)
+                        }
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .padding(.horizontal, 0)
+                        .padding(.vertical, 5)
+                }
+            }
+            .listStyle(.plain)
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: workoutsToShow)
+            .frame(height: rowHeight * CGFloat(workoutsToShow.count))
+            .scrollDisabled(true)
+            
+            if shouldShowMoreButton {
+                Button("Show More") {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        isExpanded = true
+                    }
+                }
+                .fontWeight(.semibold)
+                .contentShape(Rectangle())
+                .transition(.opacity.combined(with: .scale(scale: 0.95)))
+            }
         }
     }
     

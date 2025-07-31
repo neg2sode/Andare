@@ -49,7 +49,7 @@ struct WorkoutThumbnailCardView: View {
     private var primaryStat: String {
         // Show distance if it's meaningful, otherwise show duration.
         if workout.averageCadence != 0 {
-            let stats = StatsFormatter.formatCadence(workout.averageCadence)
+            let stats = StatsFormatter.formatCadence(workout.averageCadence, workout.workoutType)
             return stats.value + stats.unit.lowercased() + " avg."
         } else {
             let formatter = DateComponentsFormatter()

@@ -18,10 +18,7 @@ struct ContactMeView: View {
                 .fontWeight(.bold)
                 .padding(.horizontal)
 
-            // 1. This VStack is our new "fake Form" container
-            VStack(spacing: 0) {
-                Divider().padding(.leading)
-                
+            VStack(alignment: .leading, spacing: 0) {
                 // --- Row 1: Rate the App ---
                 Button(action: { requestReview() }) {
                     ContactRow(
@@ -32,7 +29,7 @@ struct ContactMeView: View {
                 }
                 .buttonStyle(.plain)
                 
-                Divider().padding(.leading)
+                Divider().padding(.horizontal)
                 
                 // --- Row 2: Send Feedback ---
                 Button(action: sendFeedbackMail) {
@@ -44,7 +41,7 @@ struct ContactMeView: View {
                 }
                 .buttonStyle(.plain)
                 
-                Divider().padding(.leading)
+                Divider().padding(.horizontal)
 
                 // --- Row 3: Follow on Bilibili ---
                 Link(destination: URL(string: "https://space.bilibili.com/1442295892")!) {
@@ -55,9 +52,6 @@ struct ContactMeView: View {
                 }
                 .foregroundStyle(.primary)
             }
-            .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(10)
-            .padding(.horizontal)
         }
     }
     

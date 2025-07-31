@@ -9,10 +9,10 @@ import SwiftUI
 
 struct ArticlesView: View {
     let articles: [Article] = [
-        Article(title: "Understanding Cycling Cadence",
+        Article(title: "Understanding Cadence",
                 subtitle: "Why finding the right rhythm matters.",
                 thumbnailImageName: "thumbnail_cadence"), // Make sure this image exists in Assets
-        Article(title: "Knee Pain and Cycling",
+        Article(title: "Cadence and Joint Health",
                 subtitle: "How cadence impacts your knee health.",
                 thumbnailImageName: "thumbnail_knee_pain"), // Make sure this image exists in Assets
         // Add more articles here later

@@ -151,7 +151,7 @@ struct WorkoutSummaryView: View {
             Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 12) { // Spacing for grid cells
                 GridRow {
                     statsView(label: "Duration", stats: StatsFormatter.formatDuration(data.duration))
-                    statsView(label: "Avg. Cadence", stats: StatsFormatter.formatCadence(data.averageCadence))
+                    statsView(label: "Avg. Cadence", stats: StatsFormatter.formatCadence(data.averageCadence, data.workoutType))
                 }
                 Divider()
                 GridRow {

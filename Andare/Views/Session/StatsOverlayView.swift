@@ -87,7 +87,7 @@ struct StatsOverlayView: View {
             OverlayStatsBlock(
                 labelLine1: "AVERAGE",
                 labelLine2: "CADENCE",
-                stats: StatsFormatter.formatCadence(rideSessionManager.averageCadence),
+                stats: StatsFormatter.formatCadence(rideSessionManager.averageCadence, rideSessionManager.workoutType),
                 valueToAnimate: rideSessionManager.averageCadence
             )
             
@@ -140,7 +140,7 @@ struct StatsOverlayView: View {
                     ElapsedTimeBlock(stats: StatsFormatter.formatDuration(0))
                 }
                 
-                OverlayStatsBlock(labelLine1: "AVERAGE", labelLine2: "CADENCE", stats: StatsFormatter.formatCadence(rideSessionManager.averageCadence), valueToAnimate: rideSessionManager.averageCadence)
+                OverlayStatsBlock(labelLine1: "AVERAGE", labelLine2: "CADENCE", stats: StatsFormatter.formatCadence(rideSessionManager.averageCadence, rideSessionManager.workoutType), valueToAnimate: rideSessionManager.averageCadence)
                 OverlayStatsBlock(labelLine1: "AVERAGE", labelLine2: "SPEED", stats: StatsFormatter.formatSpeed(rideSessionManager.averageSpeed), valueToAnimate: rideSessionManager.averageSpeed)
             }
             
