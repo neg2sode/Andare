@@ -214,7 +214,7 @@ struct HomeView: View {
         Group {
             StatsOverlayView(rideSessionManager: rideSessionManager)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
+                .offset(y: -40)
                 
             VStack {
                 Spacer()
@@ -229,7 +229,7 @@ struct HomeView: View {
                 .cornerRadius(24)
                 .shadow(radius: 5)
                 .padding(.horizontal)
-                .padding(.bottom, 0)
+                .padding(.bottom, 12)
             }
         }
     }

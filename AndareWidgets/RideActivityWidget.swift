@@ -13,7 +13,9 @@ struct RideActivityWidget: Widget {
     @ViewBuilder
     private func workoutIcon(for workoutType: WorkoutType) -> some View {
         Image(systemName: workoutType.sfSymbolName)
+            .symbolVariant(.circle.fill)
             .foregroundStyle(.accent)
+            .symbolRenderingMode(.hierarchical)
     }
     
     @ViewBuilder
@@ -59,7 +61,7 @@ struct RideActivityWidget: Widget {
                         Text(String(Int(cadence.rounded())))
                             .foregroundStyle(Color.primary)
                             .font(.system(size: 56, weight: .semibold, design: .rounded))
-                        Text("RPM")
+                        Text(context.attributes.workoutType == .cycling ? "RPM" : "SPM")
                             .font(.headline)
                             .foregroundStyle(Color.secondary)
                     }
@@ -92,7 +94,7 @@ struct RideActivityWidget: Widget {
                             HStack(alignment: .lastTextBaseline, spacing: 2) {
                                 Text(String(Int(cadence.rounded())))
                                     .font(.title2.weight(.semibold))
-                                Text("RPM")
+                                Text(context.attributes.workoutType == .cycling ? "RPM" : "SPM")
                                     .font(.body)
                                     .foregroundStyle(.secondary)
                             }
@@ -100,7 +102,7 @@ struct RideActivityWidget: Widget {
                             HStack(alignment: .lastTextBaseline, spacing: 2) {
                                 Text("--")
                                     .font(.title2.weight(.semibold))
-                                Text("RPM")
+                                Text(context.attributes.workoutType == .cycling ? "RPM" : "SPM")
                                     .font(.body)
                                     .foregroundStyle(.secondary)
                             }
@@ -122,7 +124,7 @@ struct RideActivityWidget: Widget {
                     HStack(alignment: .lastTextBaseline, spacing: 1) {
                         Text(String(Int(cadence.rounded())))
                             .font(.body.weight(.semibold).monospacedDigit())
-                        Text("RPM")
+                        Text(context.attributes.workoutType == .cycling ? "RPM" : "SPM")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .padding(.leading, -2)
