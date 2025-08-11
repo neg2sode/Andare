@@ -140,7 +140,7 @@ struct PreferencesView: View {
                 Spacer()
                 
                 HStack(spacing: 4) {
-                    Text("HealthKit")
+                    Text("Apple Health")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     
