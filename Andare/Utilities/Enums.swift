@@ -19,10 +19,10 @@ enum CadenceZone: String, Codable {
         if cadence <= 0 {
             return .zero
         }
-        if let threshold = workoutType.getInfo().threshold {
-            if cadence < threshold.low {
+        if let cutoffs = workoutType.getInfo().cutoffs {
+            if cadence < cutoffs.low {
                 return .low
-            } else if cadence > threshold.high {
+            } else if cadence > cutoffs.high {
                 return .high
             } else {
                 return .normal
@@ -117,11 +117,23 @@ enum WorkoutType: String, CaseIterable, Identifiable, Codable {
     func getInfo() -> WorkoutCadenceInfo {
         switch(self) {
         case .cycling:
-            return WorkoutCadenceInfo(range: (min: 20, max: 150), threshold: (low: 60, high: 110)) // RPM
+            return WorkoutCadenceInfo(
+                range: (min: 20, max: 150),
+                cutoffs: (low: 60, high: 110),
+                threshold: 2993.633414
+            )
         case .running:
-            return WorkoutCadenceInfo(range: (min: 100, max: 240), threshold: (low: 160, high: 200))
+            return WorkoutCadenceInfo(
+                range: (min: 100, max: 240),
+                cutoffs: (low: 160, high: 200),
+                threshold: 1885.868061
+            )
         case .walking:
-            return WorkoutCadenceInfo(range: (min: 60, max: 160), threshold: nil)
+            return WorkoutCadenceInfo(
+                range: (min: 60, max: 160),
+                cutoffs: nil,
+                threshold: 2842.008795
+            )
         }
     }
 }
@@ -147,5 +159,6 @@ enum DominantAxis: String, CaseIterable {
 
 struct WorkoutCadenceInfo {
     let range: (min: Double, max: Double)
-    let threshold: (low: Double, high: Double)?
+    let cutoffs: (low: Double, high: Double)?
+    let threshold: Float
 }

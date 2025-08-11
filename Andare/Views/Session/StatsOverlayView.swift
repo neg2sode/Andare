@@ -158,10 +158,15 @@ struct StatsOverlayView: View {
                     .font(.headline)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
+                Spacer()
+                
                 let axis = rideSessionManager.dominantAxis
                 if axis != .none {
-                    Spacer()
                     Text("Dominant Axis: \(axis.rawValue.uppercased())")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Not a Rotation")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -220,18 +225,31 @@ struct StatsOverlayView: View {
                 .cornerRadius(3)
             }
             
-            if let peakFrequency {
-                RuleMark(x: .value("Peak", peakFrequency))
-                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [5]))
-                    .foregroundStyle(Color.cadenceColour)
-                    .annotation(position: .top, alignment: .center) {
-                        Text("Peak")
-                            .font(.caption2.bold())
-                            .padding(6)
-                            .background(Color(.systemBackground))
-                            .cornerRadius(6)
-                            .foregroundStyle(Color.accentColor)
-                    }
+            if rideSessionManager.dominantAxis != .none {
+                if let peakFrequency {
+                    RuleMark(x: .value("Peak", peakFrequency))
+                        .lineStyle(StrokeStyle(lineWidth: 2, dash: [5]))
+                        .foregroundStyle(Color.cadenceColour)
+                        .annotation(position: .top, alignment: .center) {
+                            Text("Peak")
+                                .font(.caption2.bold())
+                                .padding(6)
+                                .background(Color(.systemBackground))
+                                .cornerRadius(6)
+                                .foregroundStyle(Color.accentColor)
+                        }
+                }
+            } else {
+                let threshold = rideSessionManager.workoutType.getInfo().threshold
+                RuleMark(y: .value("Threshold", threshold))
+                     .foregroundStyle(.gray)
+                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))
+                     .annotation(position: .top, alignment: .trailing) {
+                         Text("Treshold")
+                             .font(.caption2.bold())
+                             .padding(3)
+                             .foregroundStyle(.gray)
+                     }
             }
         }
         .chartXScale(domain: 0...(cadenceRange.max / 60))

@@ -67,6 +67,7 @@ final class MotionManager {
     private var systemUptimeAtStart: TimeInterval = 0
     private var minCadenceFreq: Double
     private var maxCadenceFreq: Double
+    private var magnitudeThreshold: Float
 
     let cadencePublisher = PassthroughSubject<CadenceData, Never>()
     let altitudePublisher = PassthroughSubject<AltitudeData, Never>()
@@ -80,6 +81,7 @@ final class MotionManager {
         let cadenceRange = workoutType.getInfo().range
         self.minCadenceFreq = cadenceRange.min / 60.0 // converting to frequency (Hz) from RPM
         self.maxCadenceFreq = cadenceRange.max / 60.0
+        self.magnitudeThreshold = workoutType.getInfo().threshold
         operationQueue.maxConcurrentOperationCount = 1
         motionManager.gyroUpdateInterval = MotionManager.UPDATE_INTERVAL
     }
@@ -88,6 +90,7 @@ final class MotionManager {
         let cadenceRange = newType.getInfo().range
         self.minCadenceFreq = cadenceRange.min / 60.0
         self.maxCadenceFreq = cadenceRange.max / 60.0
+        self.magnitudeThreshold = newType.getInfo().threshold
     }
 
     func startUpdates() {
@@ -131,7 +134,7 @@ final class MotionManager {
                 case .x: sensorAxisData = buffer.map { SensorAxisData(timestamp: $0.timestamp, value: $0.x) }
                 case .y: sensorAxisData = buffer.map { SensorAxisData(timestamp: $0.timestamp, value: $0.y) }
                 case .z: sensorAxisData = buffer.map { SensorAxisData(timestamp: $0.timestamp, value: $0.z) }
-                case .none: break
+                case .none: sensorAxisData = buffer.map { SensorAxisData(timestamp: $0.timestamp, value: sqrt(pow($0.x, 2) + pow($0.y, 2) + pow($0.z, 2)))}
                 }
                 
                 var processingEndTime = Date()
@@ -254,7 +257,8 @@ final class MotionManager {
             var magnitudes = [Float](repeating: 0, count: n/2)
             vDSP_zvmags(&output, 1, &magnitudes, 1, vDSP_Length(n/2))
             
-            var maxMag: Float = magnitudes[0] // 0 is always considered for stillness detection
+            // 0 is always considered for stillness detection
+            var maxMagnitude: Float = magnitudes[0]
             var peakIndex = 0 // index starting from 0
             
             for k in 1..<n/2 {
@@ -262,20 +266,22 @@ final class MotionManager {
                 if freq < self.minCadenceFreq { continue }
                 if freq > self.maxCadenceFreq { break }
 
-                if magnitudes[k] > maxMag {
-                    maxMag = magnitudes[k]
+                if magnitudes[k] > maxMagnitude {
+                    maxMagnitude = magnitudes[k]
                     peakIndex = k
                 }
             }
-               
-            let peakFreq = Double(peakIndex) * sampleRate / Double(n)
-            let cadence = peakFreq * 60
             
-            if Double(maxMag) > resMagnitude {
-                resMagnitude = Double(maxMag)
-                resAxis = axis
-                resCadence = cadence
+            if Double(maxMagnitude) > resMagnitude {
+                resMagnitude = Double(maxMagnitude)
                 resMagnitudes = Array(magnitudes[minIndex...maxIndex])
+                
+                if maxMagnitude > self.magnitudeThreshold {
+                    let peakFreq = Double(peakIndex) * sampleRate / Double(n)
+                    let cadence = peakFreq * 60
+                    resCadence = cadence
+                    resAxis = axis
+                }
             }
         }
         
