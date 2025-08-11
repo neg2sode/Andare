@@ -138,6 +138,13 @@ enum NotificationFrequency: String, Codable, CaseIterable {
     case high = "High"
 }
 
+enum DominantAxis: String, CaseIterable {
+    case x = "X"
+    case y = "Y"
+    case z = "Z"
+    case none = "None"
+}
+
 struct WorkoutCadenceInfo {
     let range: (min: Double, max: Double)
     let threshold: (low: Double, high: Double)?

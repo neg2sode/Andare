@@ -47,6 +47,9 @@ final class RideSessionManager: ObservableObject {
     @Published var totalCalories: Double = 0.0
     @Published var logEntries: [LogEntry] = []
     @Published var locationAuthStatus: CLAuthorizationStatus = .notDetermined
+    @Published var dominantAxis: DominantAxis = .none
+    @Published var powerSpectrum: [FFTPoint] = []
+    @Published var sensorData: [SensorAxisData] = []
     
     // --- Constants ---
     private let halfMaxLogEntries = 500
@@ -233,8 +236,12 @@ final class RideSessionManager: ObservableObject {
                 
                 let timestamp = rawCadenceData.timestamp
                 let rawCadence = rawCadenceData.cadence
-                let result = await self.computeCadenceSegment(timestamp: timestamp, rawCadence: rawCadence)
                 
+                self.dominantAxis = rawCadenceData.dominantAxis
+                self.powerSpectrum = rawCadenceData.powerSpectrum
+                self.sensorData = rawCadenceData.sensorData
+                
+                let result = await self.computeCadenceSegment(timestamp: timestamp, rawCadence: rawCadence)
                 self.cadenceSegments.append(result.segment)
                 
                 self.counter.update(
@@ -612,6 +619,9 @@ final class RideSessionManager: ObservableObject {
         self.activeCalories = 0.0
         self.averageCadence = nil
         self.averageSpeed = nil
+        self.dominantAxis = .none
+        self.powerSpectrum.removeAll()
+        self.sensorData.removeAll()
     }
     
     deinit {

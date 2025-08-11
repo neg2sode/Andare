@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Charts
 import Combine
 
 struct StatsOverlayView: View {
@@ -25,7 +26,7 @@ struct StatsOverlayView: View {
     var body: some View {
         if verticalSizeClass == .regular {
             ZStack(alignment: .top) {
-                AnalysisPanelView(workoutType: rideSessionManager.workoutType)
+                analysisPanel
                     .offset(y: isExpanded ? 0 : -slideOffset)
                 
                 portraitLayout
@@ -148,6 +149,116 @@ struct StatsOverlayView: View {
             }
         }
         .frame(maxWidth: .infinity) // Allow the HStack to center itself
+    }
+    
+    private var analysisPanel: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack {
+                Text("Cadence Analysis")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                let axis = rideSessionManager.dominantAxis
+                if axis != .none {
+                    Spacer()
+                    Text("Dominant Axis: \(axis.rawValue.uppercased())")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
+            ZStack {
+                if let startTime = rideSessionManager.sensorData.first?.timestamp {
+                    VStack(alignment: .leading) {
+                        Text("Power Spectrum")
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                        
+                        powerSpectrumChart
+
+                        Text("Sensor Time Series")
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                        
+                        timeSeriesChart(startTime)
+                    }
+                } else {
+                    VStack {
+                        Spacer()
+                        Text("No Analysis Yet")
+                            .font(.title3)
+                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .multilineTextAlignment(.center)
+                        Spacer()
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 30)
+        .padding(.bottom, 30)
+        .frame(height: slideOffset)
+    }
+    
+    private var powerSpectrumChart: some View {
+        let cadenceRange = rideSessionManager.workoutType.getInfo().range
+        let peakFrequency = rideSessionManager.powerSpectrum.max(by: { $0.power < $1.power })?.frequency
+        
+        return Chart {
+            ForEach(rideSessionManager.powerSpectrum) { point in
+                BarMark(
+                    x: .value("Frequency (Hz)", point.frequency),
+                    y: .value("Power", point.power)
+                )
+                .foregroundStyle(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.blue.opacity(0.7), Color.blue]),
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
+                )
+                .cornerRadius(3)
+            }
+            
+            if let peakFrequency {
+                RuleMark(x: .value("Peak", peakFrequency))
+                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [5]))
+                    .foregroundStyle(Color.cadenceColour)
+                    .annotation(position: .top, alignment: .center) {
+                        Text("Peak")
+                            .font(.caption2.bold())
+                            .padding(6)
+                            .background(Color(.systemBackground))
+                            .cornerRadius(6)
+                            .foregroundStyle(Color.accentColor)
+                    }
+            }
+        }
+        .chartXScale(domain: 0...(cadenceRange.max / 60))
+        .chartXAxisLabel("Frequency (Hz)")
+        .chartYAxis(.hidden)
+    }
+    
+    private func timeSeriesChart(_ startTime: TimeInterval) -> some View {
+        return Chart {
+            ForEach(rideSessionManager.sensorData) { point in
+                LineMark(
+                    x: .value("Time", point.timestamp - startTime),
+                    y: .value("Sensor", point.value)
+                )
+                .foregroundStyle(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.green.opacity(0.7), Color.green]),
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
+                )
+                .interpolationMethod(.cardinal)
+            }
+        }
+        .chartXScale(domain: 0...MotionManager.SEGMENT_DURATION)
+        .chartXAxisLabel("Time (s)")
+        .chartYAxis(.hidden)
     }
 }
 

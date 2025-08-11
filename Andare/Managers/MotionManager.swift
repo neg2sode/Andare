@@ -9,17 +9,39 @@ import CoreMotion
 import Combine
 import Accelerate
 
-struct SensorData {
-    let timestamp: Double
+struct SensorBufferData {
+    let timestamp: TimeInterval
     let x: Double
     let y: Double
     let z: Double
+}
+
+struct SensorAxisData: Identifiable, Equatable {
+    let id = UUID()
+    let timestamp: TimeInterval
+    let value: Double
 }
 
 struct CadenceData {
     let timestamp: Date
     let cadence: Double
     let preferredCadence: Double?
+    
+    let dominantAxis: DominantAxis
+    let powerSpectrum: [FFTPoint]
+    let sensorData: [SensorAxisData]
+}
+
+struct FFTPoint: Identifiable {
+    let id = UUID()
+    let frequency: Double
+    let power: Double
+}
+
+struct FFTResult {
+    let axis: DominantAxis
+    let powerSpectrum: [FFTPoint]
+    let cadence: Double
 }
 
 struct AltitudeData {
@@ -39,8 +61,8 @@ final class MotionManager {
     private let altimeter = CMAltimeter()
     private let operationQueue = OperationQueue()
 
-    private var segmentBuffer: [SensorData] = []
-    private var sectionBuffer: [SensorData] = []
+    private var segmentBuffer: [SensorBufferData] = []
+    private var sectionBuffer: [SensorBufferData] = []
     private var timeIntervalSince1970AtStart: TimeInterval = 0
     private var systemUptimeAtStart: TimeInterval = 0
     private var minCadenceFreq: Double
@@ -85,7 +107,7 @@ final class MotionManager {
             if let error = error { fatalError("*** Gyroscope fatal update error: \(error.localizedDescription) ***") }
 
             let eventWallTime = self.timeIntervalSince1970AtStart + (data.timestamp - self.systemUptimeAtStart)
-            let gyroData = SensorData(
+            let gyroData = SensorBufferData(
                 timestamp: eventWallTime,
                 x: data.rotationRate.x,
                 y: data.rotationRate.y,
@@ -96,29 +118,52 @@ final class MotionManager {
             // Process buffer when full
             if self.segmentBuffer.count >= Self.SEGMENT_BUFFER_SIZE {
                 self.sectionBuffer.append(contentsOf: self.segmentBuffer)
-                var bufferToProcess = Array(self.segmentBuffer.prefix(Self.SEGMENT_BUFFER_SIZE))
-                let newCadence = self.processBuffer(bufferToProcess)
+                let buffer = Array(self.segmentBuffer.prefix(Self.SEGMENT_BUFFER_SIZE))
+                
+                let cadenceResult = self.processBuffer(buffer)
+                let newCadence = cadenceResult?.cadence ?? 0.0
+                let dominantAxis = cadenceResult?.axis ?? .none
+                let powerSpectrum = cadenceResult?.powerSpectrum ?? []
+                
+                var sensorAxisData: [SensorAxisData] = []
+                
+                switch dominantAxis {
+                case .x: sensorAxisData = buffer.map { SensorAxisData(timestamp: $0.timestamp, value: $0.x) }
+                case .y: sensorAxisData = buffer.map { SensorAxisData(timestamp: $0.timestamp, value: $0.y) }
+                case .z: sensorAxisData = buffer.map { SensorAxisData(timestamp: $0.timestamp, value: $0.z) }
+                case .none: break
+                }
+                
                 var processingEndTime = Date()
                 // Remove the processed part efficiently (sliding window)
                 self.segmentBuffer.removeFirst(Self.SEGMENT_BUFFER_SIZE)
                 
                 if self.sectionBuffer.count >= Self.SECTION_BUFFER_SIZE {
-                    bufferToProcess = Array(self.sectionBuffer.prefix(Self.SECTION_BUFFER_SIZE))
-                    let newPreferredCadence = self.processBuffer(bufferToProcess)
+                    let preferredBuffer = Array(self.sectionBuffer.prefix(Self.SECTION_BUFFER_SIZE))
+                    
+                    let preferredCadenceResult = self.processBuffer(preferredBuffer)
+                    let newPreferredCadence = preferredCadenceResult?.cadence ?? 0.0
+                    
                     processingEndTime = Date()
                     self.sectionBuffer.removeFirst(Self.SECTION_BUFFER_SIZE)
                     
                     let cadenceRecord = CadenceData(
                         timestamp: processingEndTime,
                         cadence: newCadence,
-                        preferredCadence: newPreferredCadence
+                        preferredCadence: newPreferredCadence,
+                        dominantAxis: dominantAxis,
+                        powerSpectrum: powerSpectrum,
+                        sensorData: sensorAxisData
                     )
                     self.cadencePublisher.send(cadenceRecord)
                 } else {
                     let cadenceRecord = CadenceData(
                         timestamp: processingEndTime,
                         cadence: newCadence,
-                        preferredCadence: nil
+                        preferredCadence: nil,
+                        dominantAxis: dominantAxis,
+                        powerSpectrum: powerSpectrum,
+                        sensorData: sensorAxisData
                     )
                     self.cadencePublisher.send(cadenceRecord)
                 }
@@ -157,22 +202,30 @@ final class MotionManager {
         sectionBuffer.removeAll()
     }
     
-    func processBuffer(_ buffer: [SensorData]) -> Double {
-        guard !buffer.isEmpty else { return 0 }
+    func processBuffer(_ buffer: [SensorBufferData]) -> FFTResult? {
+        guard !buffer.isEmpty else { return nil }
         
-        // 1. Extract raw data for all axes
+        // Extract raw data for all axes
         let x = buffer.map { Float($0.x) }
         let y = buffer.map { Float($0.y) }
         let z = buffer.map { Float($0.z) }
         
-        // 2. Shared parameters
+        // Shared parameters
         let n = buffer.count
         let log2n = vDSP_Length(log2(Double(n)))
-        guard let fftSetup = vDSP_create_fftsetup(log2n, FFTRadix(FFT_RADIX2)) else { return 0 }
+        let sampleRate = Double(n) / (buffer.last!.timestamp - buffer.first!.timestamp)
+        let minIndex = Int((self.minCadenceFreq * Double(n)) / sampleRate)
+        let maxIndex = Int((self.maxCadenceFreq * Double(n)) / sampleRate)
+        
+        guard let fftSetup = vDSP_create_fftsetup(log2n, FFTRadix(FFT_RADIX2)) else { return nil }
         defer { vDSP_destroy_fftsetup(fftSetup) }
-
+        
         // reused variables
-        var peaks: [(frequency: Double, magnitude: Double)] = []
+        var resAxis: DominantAxis = .none
+        var resMagnitude: Double = 0
+        var resMagnitudes: [Float] = []
+        var resCadence: Double = 0
+
         var signal = [Float](repeating: 0, count: n)
         var real = [Float](repeating: 0, count: n/2)
         var imag = [Float](repeating: 0, count: n/2)
@@ -182,8 +235,8 @@ final class MotionManager {
             }
         }
 
-        // 3. Process each axis
-        for axisData in [x, y, z] {
+        // Process each axis
+        for (axis, axisData) in zip([DominantAxis.x, .y, .z], [x, y, z]) {
             // Apply Hann window
             signal.replaceSubrange(0..<n, with: axisData)
             var window = [Float](repeating: 0, count: n)
@@ -200,11 +253,10 @@ final class MotionManager {
             // Magnitudes
             var magnitudes = [Float](repeating: 0, count: n/2)
             vDSP_zvmags(&output, 1, &magnitudes, 1, vDSP_Length(n/2))
-
-            let sampleRate = Double(n) / (buffer.last!.timestamp - buffer.first!.timestamp)
+            
             var maxMag: Float = magnitudes[0] // 0 is always considered for stillness detection
             var peakIndex = 0 // index starting from 0
-               
+            
             for k in 1..<n/2 {
                 let freq = Double(k) * sampleRate / Double(n)
                 if freq < self.minCadenceFreq { continue }
@@ -217,12 +269,24 @@ final class MotionManager {
             }
                
             let peakFreq = Double(peakIndex) * sampleRate / Double(n)
-            peaks.append((peakFreq, Double(maxMag)))
+            let cadence = peakFreq * 60
+            
+            if Double(maxMag) > resMagnitude {
+                resMagnitude = Double(maxMag)
+                resAxis = axis
+                resCadence = cadence
+                resMagnitudes = Array(magnitudes[minIndex...maxIndex])
+            }
         }
         
-        guard let dominantPeak = peaks.max(by: { $0.magnitude < $1.magnitude }) else { return 0 }
-        let rpm = dominantPeak.frequency * 60
-        return rpm
+        let powerSpectrum = resMagnitudes.enumerated().map { (index, magnitude) in
+            let fullIndex = minIndex + index
+            let frequency = Double(fullIndex) * sampleRate / Double(n)
+            let power = Double(magnitude)
+            return FFTPoint(frequency: frequency, power: power)
+        }
+        
+        return FFTResult(axis: resAxis, powerSpectrum: powerSpectrum, cadence: resCadence)
     }
     
     deinit {
