@@ -14,8 +14,13 @@ import CoreLocation
 extension WorkoutData {
     /// Creates a transient WorkoutData struct from a persistent WorkoutDataModel object.
     init(from model: WorkoutDataModel) {
-        let segments = model.cadenceSegments.map { CadenceSegment(from: $0) }
-        let intents = model.notificationIntents.map { NotificationIntent(from: $0) }
+        let segments = model.cadenceSegments
+            .sorted { $0.timestamp < $1.timestamp }
+            .map { CadenceSegment(from: $0) }
+        
+        let intents = model.notificationIntents
+            .sorted { $0.endDate < $1.endDate }
+            .map { NotificationIntent(from: $0) }
         
         self.init(
             workoutType: model.workoutType,

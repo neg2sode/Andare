@@ -201,7 +201,7 @@ struct WorkoutSummaryView: View {
     
     // 2. Chart Section
     private var chartSection: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Cadence Over Time")
                 .font(.title2)
                 .fontWeight(.bold)
@@ -267,7 +267,7 @@ struct WorkoutSummaryView: View {
         VStack(alignment: .leading) {
             switch data.mapDisplayContext {
             case .full:
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text("Route Map")
                         .font(.title2)
                         .fontWeight(.bold)
@@ -456,7 +456,7 @@ struct WorkoutSummaryView: View {
              .foregroundStyle(.gray)
              .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))
              .annotation(position: .top, alignment: .trailing) {
-                 Text("Avg.: \(Int(data.averageCadence))")
+                 Text("Avg.: \(Int(data.averageCadence.rounded()))")
                      .font(.caption)
                      .foregroundStyle(.gray)
                      .padding(.trailing, 4)
