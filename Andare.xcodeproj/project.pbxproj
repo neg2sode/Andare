@@ -549,6 +549,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Andare/Info.plist;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Andare saves your completed workouts—including route, distance, and calories—to Apple Health. This allows you to track your fitness progress over time and contributes to your Activity Rings.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "To provide more accurate calorie calculations, Andare can read your body weight and height from Apple Health. This information is used only on your device and is never shared.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Andare uses your location to track your route, distance, and speed during outdoor workouts. This allows you to see a map of your activity in the workout summary.";
@@ -590,6 +591,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Andare/Info.plist;
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Andare saves your completed workouts—including route, distance, and calories—to Apple Health. This allows you to track your fitness progress over time and contributes to your Activity Rings.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "To provide more accurate calorie calculations, Andare can read your body weight and height from Apple Health. This information is used only on your device and is never shared.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Andare uses your location to track your route, distance, and speed during outdoor workouts. This allows you to see a map of your activity in the workout summary.";
