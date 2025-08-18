@@ -186,16 +186,6 @@ struct HomeView: View {
             .onChange(of: pagingState.selectedWorkoutType) { _, newType in
                 rideSessionManager.configure(for: newType)
             }
-            .alert(alertManager.title, isPresented: $alertManager.isPresenting) {
-                if alertManager.showSettingsButton {
-                     Button("Open Settings") { UIApplication.openAppSettings() }
-                     Button("Cancel", role: .cancel) { }
-                 } else {
-                     Button("OK", role: .cancel) { }
-                 }
-            } message: {
-                Text(alertManager.message)
-            }
         }
     }
     
@@ -331,6 +321,16 @@ struct HomeView: View {
     }
 
     private func startWorkoutSequence(for workoutType: WorkoutType) {
+        let hkWorkoutStatus = healthKitManager.authorisationStatus(for: HKObjectType.workoutType())
+        
+        guard hkWorkoutStatus == .sharingAuthorized else {
+            alertManager.showAlert(
+                title: "Workouts Permission Required",
+                message: "Please enable Workouts Sharing in Settings → Privacy & Security → Health → Andare to start a workout."
+            )
+            return
+        }
+        
         let locationStatus = locationManager.authorisationStatus
         
         if !hasShownGuide(for: workoutType) {
@@ -340,15 +340,6 @@ struct HomeView: View {
                 sessionState = .showingGuide(workoutType: workoutType, requestAuth: false)
             }
             isDrawerPresented = false
-            return
-        }
-        
-        let hkWorkoutStatus = healthKitManager.authorisationStatus(for: HKObjectType.workoutType())
-        guard hkWorkoutStatus == .sharingAuthorized else {
-            alertManager.showAlert(
-                title: "Workouts Permission Required",
-                message: "Please enable Workouts Sharing in Settings → Privacy & Security → Health → Andare to start a workout."
-            )
             return
         }
 

@@ -26,7 +26,6 @@ struct PreferencesView: View {
     
     @StateObject private var locationManager = LocationManager.shared
     @StateObject private var healthKitManager = HealthKitManager.shared
-    @StateObject private var alertManager = AlertManager.shared
     @StateObject private var notificationManager = NotificationManager.shared
     
     private let frequencyTip = NotificationFrequencyTip()
@@ -73,18 +72,6 @@ struct PreferencesView: View {
             }
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
-        .alert(alertManager.title, isPresented: $alertManager.isPresenting) {
-            if alertManager.showSettingsButton {
-                Button("Open Settings") {
-                    UIApplication.openAppSettings()
-                }
-                Button("Cancel", role: .cancel) { }
-            } else {
-                Button("OK", role: .cancel) { }
-            }
-        } message: {
-            Text(alertManager.message)
-        }
         .onAppear {
             self.healthKitProfileLinked = healthKitManager.profileCharacteristicsAuthorised()
             notificationManager.refreshStatus()
@@ -218,25 +205,14 @@ struct PreferencesView: View {
 
         if (status == .restricted || status == .denied) && showLocationWarningPreference {
             showingLocationWarningDetail = true
+        } else if status == .notDetermined {
+            locationManager.requestAuthorisation()
         } else {
             UIApplication.openAppSettings()
         }
     }
     
-    private func handleWorkoutsRowTap() {
-        let status = healthKitManager.authorisationStatus(for: HKObjectType.workoutType())
-        
-        if status != .sharingAuthorized {
-            alertManager.showAlert(
-                title: "How to Grant Workouts Permission",
-                message: """
-                    Andare needs permission to save Workouts in Health \
-                    to track rides reliably. Please enable Workouts Sharing \
-                    in Settings → Privacy & Security → Health → Andare.
-                    """
-            )
-        }
-    }
+    private func handleWorkoutsRowTap() { }
     
     private func handleNotificationsRowTap() {
         switch notificationManager.authorizationStatus {

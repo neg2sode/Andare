@@ -146,6 +146,7 @@ struct GuideView: View {
         }
         .onAppear {
             hasAppeared = true
+            healthKitManager.refreshStatus()
         }
     }
     

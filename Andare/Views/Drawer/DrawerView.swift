@@ -11,6 +11,8 @@ struct DrawerView: View {
     @State private var isShowingPreferences = false
     @State private var workoutsExpanded = false
     
+    @StateObject var alertManager = AlertManager.shared
+    
     @EnvironmentObject var drawerState: DrawerState
     @EnvironmentObject var pagingState: WorkoutPagingState
 
@@ -72,6 +74,16 @@ struct DrawerView: View {
             PreferencesView()
                 .presentationDetents([.fraction(0.7), .large])
                 .presentationDragIndicator(.hidden)
+        }
+        .alert(alertManager.title, isPresented: $alertManager.isPresenting) {
+            if alertManager.showSettingsButton {
+                 Button("Open Settings") { UIApplication.openAppSettings() }
+                 Button("Cancel", role: .cancel) { }
+             } else {
+                 Button("OK", role: .cancel) { }
+             }
+        } message: {
+            Text(alertManager.message)
         }
     }
 }
