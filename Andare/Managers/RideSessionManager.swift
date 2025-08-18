@@ -30,6 +30,8 @@ struct CadenceSegmentComputationResult {
 final class RideSessionManager: ObservableObject {
     @AppStorage("userWeightKg") private var userWeightKg: Double = 70.0
     @AppStorage("userHeightCm") private var userHeightCm: Double = 170.0
+    @AppStorage("realTimeAlertsEnabled") private var realTimeAlertsEnabled: Bool = false
+    @AppStorage("finishWorkoutAlertEnabled") private var finishWorkoutAlertEnabled: Bool = false
 
     // --- Dependencies ---
     var motionManager: MotionManager
@@ -298,15 +300,19 @@ final class RideSessionManager: ObservableObject {
                     
                     counter.split += 1
                     if counter.split >= maxSplitCount {
-                        if workoutType == .cycling {
-                            await counter.judgeNotificationA()
+                        if realTimeAlertsEnabled {
+                            if workoutType == .cycling {
+                                await counter.judgeNotificationA()
+                            }
                         }
                         
-                        if locationAuthStatus == .authorizedAlways || locationAuthStatus == .authorizedWhenInUse {
-                            if workoutType == .cycling {
-                                await counter.judgeNotificationC()
-                            } else if workoutType == .walking || workoutType == .running {
-                                await counter.judgeNotificationB()
+                        if finishWorkoutAlertEnabled {
+                            if locationAuthStatus == .authorizedAlways || locationAuthStatus == .authorizedWhenInUse {
+                                if workoutType == .cycling {
+                                    await counter.judgeNotificationC()
+                                } else if workoutType == .walking || workoutType == .running {
+                                    await counter.judgeNotificationB()
+                                }
                             }
                         }
                         
