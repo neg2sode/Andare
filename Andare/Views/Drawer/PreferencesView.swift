@@ -1,5 +1,5 @@
 //
-//  PreferenceView.swift
+//  PreferencesView.swift
 //  Andare
 //
 //  Created by neg2sode on 2025/5/26.
@@ -24,6 +24,7 @@ struct PreferencesView: View {
     @State private var showingLocationWarningDetail = false
     @State private var healthKitProfileLinked = false
     
+    @StateObject var alertManager = AlertManager()
     @StateObject private var locationManager = LocationManager.shared
     @StateObject private var healthKitManager = HealthKitManager.shared
     @StateObject private var notificationManager = NotificationManager.shared
@@ -49,14 +50,10 @@ struct PreferencesView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(
-                            Color.secondary,
-                            Color(.tertiarySystemFill)
-                        )
-                        .font(.title)
+                    Text("Done")
+                        .foregroundStyle(Color.accent)
                 }
+                .padding(.horizontal, 6)
             }
             .padding(.top, 20)
             .padding(.bottom, 8)
@@ -75,6 +72,16 @@ struct PreferencesView: View {
         .onAppear {
             self.healthKitProfileLinked = healthKitManager.profileCharacteristicsAuthorised()
             notificationManager.refreshStatus()
+        }
+        .alert(alertManager.title, isPresented: $alertManager.isPresenting) {
+            if alertManager.showSettingsButton {
+                 Button("Open Settings") { UIApplication.openAppSettings() }
+                 Button("Cancel", role: .cancel) { }
+             } else {
+                 Button("OK", role: .cancel) { }
+             }
+        } message: {
+            Text(alertManager.message)
         }
     }
     
@@ -212,7 +219,20 @@ struct PreferencesView: View {
         }
     }
     
-    private func handleWorkoutsRowTap() { }
+    private func handleWorkoutsRowTap() {
+        let status = healthKitManager.authorisationStatus(
+            for: HKObjectType.workoutType()
+        )
+        
+        if status == .notDetermined {
+            Task { try? await healthKitManager.requestAuthorisation() }
+        } else if status == .sharingDenied {
+            alertManager.showAlert(
+                title: "How to Grant Workouts Permission",
+                message: "Please enable Workouts Sharing in Settings → Privacy & Security → Health → Andare to start a workout."
+            )
+        }
+    }
     
     private func handleNotificationsRowTap() {
         switch notificationManager.authorizationStatus {

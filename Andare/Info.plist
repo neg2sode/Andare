@@ -7,7 +7,6 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
-		<string>bluetooth-peripheral</string>
 	</array>
 </dict>
 </plist>
