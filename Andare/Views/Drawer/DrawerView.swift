@@ -31,6 +31,7 @@ struct DrawerView: View {
                         .imageScale(.large)
                         .foregroundStyle(Color.accentColor)
                 }
+                .padding(.horizontal, 6)
             }
             .padding(.horizontal)
             .padding(.bottom, 12)
