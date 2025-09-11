@@ -323,7 +323,7 @@ struct HomeView: View {
     private func startWorkoutSequence(for workoutType: WorkoutType) {
         let hkWorkoutStatus = healthKitManager.authorisationStatus(for: HKObjectType.workoutType())
         
-        guard hkWorkoutStatus == .sharingAuthorized else {
+        guard hkWorkoutStatus != .sharingDenied else {
             alertManager.showAlert(
                 title: "Workouts Permission Required",
                 message: "Please enable Workouts Sharing in Settings → Privacy & Security → Health → Andare to start a workout."
