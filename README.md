@@ -6,6 +6,7 @@ Finding the right pace in cycling and running can be hard for many since human b
 * Stop the workout to see the summary. You can also view history summaries in Fitness app.
 
 <img width="3000" height="2250" alt="andare_showcase" src="https://github.com/user-attachments/assets/3a783b17-c453-4a86-b07e-b95415baa3e4" />
+<img width="3000" height="2250" alt="andare_showcase" src="https://github.com/user-attachments/assets/3ebc741d-afb7-44cc-ae27-9ffb2ed3c9b5" />
 
 ## About Me
 Hey! My name is neg2sode, and I'm an undergraduate student born & raised in Shanghai / studying in London. Aside from being a student, I'm also a passionate mountain biker who also spends time training on the road.
