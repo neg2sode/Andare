@@ -39,6 +39,8 @@ struct WorkoutSummaryView: View {
     @State private var isShowingFullMap = false
     @State private var mapCameraPosition: MapCameraPosition
     
+    @StateObject private var formatter = StatsFormatter.shared
+    
     @Environment(\.dismiss) var dismiss
     
     init(data: WorkoutData) {
@@ -76,7 +78,7 @@ struct WorkoutSummaryView: View {
                 floatingDoneButton
             }
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationTitle(StatsFormatter.formatSummaryTitle(data.startTime, data.workoutType))
+            .navigationTitle(formatter.formatSummaryTitle(data.startTime, data.workoutType))
             .navigationBarTitleDisplayMode(.inline)
         }
         .sheet(isPresented: $isShowingFullMap) {
@@ -88,7 +90,7 @@ struct WorkoutSummaryView: View {
                     routePolyline: polyline,
                     start: start,
                     end: end,
-                    formattedTitle: StatsFormatter.formatSummaryTitle(data.startTime, data.workoutType)
+                    formattedTitle: formatter.formatSummaryTitle(data.startTime, data.workoutType)
                 )
             }
         }
@@ -150,23 +152,23 @@ struct WorkoutSummaryView: View {
 
             Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 12) { // Spacing for grid cells
                 GridRow {
-                    statsView(label: "Duration", stats: StatsFormatter.formatDuration(data.duration))
-                    statsView(label: "Avg. Cadence", stats: StatsFormatter.formatCadence(data.averageCadence, data.workoutType))
+                    statsView(label: "Duration", stats: formatter.formatDuration(data.duration))
+                    statsView(label: "Avg. Cadence", stats: formatter.formatCadence(data.averageCadence, data.workoutType))
                 }
                 Divider()
                 GridRow {
-                    statsView(label: "Distance", stats: StatsFormatter.formatDistance(data.totalDistance))
-                    statsView(label: "Elevation Gain", stats: StatsFormatter.formatElevation(data.elevationGain))
+                    statsView(label: "Distance", stats: formatter.formatDistance(data.totalDistance))
+                    statsView(label: "Elevation Gain", stats: formatter.formatElevation(data.elevationGain))
                 }
                 Divider()
                 GridRow {
-                    statsView(label: "Avg. Speed", stats: StatsFormatter.formatSpeed(data.averageSpeed))
-                    statsView(label: "Max Speed", stats: StatsFormatter.formatSpeed(data.maxSpeed))
+                    statsView(label: "Avg. Speed", stats: formatter.formatSpeed(data.averageSpeed))
+                    statsView(label: "Max Speed", stats: formatter.formatSpeed(data.maxSpeed))
                 }
                 Divider()
                 GridRow {
-                    statsView(label: "Active Kilocalories", stats: StatsFormatter.formatEnergyBurned(data.activeCalories))
-                    statsView(label: "Total Kilocalories", stats: StatsFormatter.formatEnergyBurned(data.totalCalories))
+                    statsView(label: "Active Kilocalories", stats: formatter.formatEnergyBurned(data.activeCalories))
+                    statsView(label: "Total Kilocalories", stats: formatter.formatEnergyBurned(data.totalCalories))
                 }
             }
         }

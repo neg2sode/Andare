@@ -197,6 +197,7 @@ struct HomeView: View {
                 workoutType: workoutType,
                 action: startWorkoutSequence
             )
+            .offset(y: -40)
         }
     }
     

@@ -162,3 +162,9 @@ struct WorkoutCadenceInfo {
     let cutoffs: (low: Double, high: Double)?
     let threshold: Float
 }
+
+enum UnitSystem: String, Codable, CaseIterable {
+    case systemDefault = "System Default"
+    case metric = "Metric"
+    case us = "U.S."
+}

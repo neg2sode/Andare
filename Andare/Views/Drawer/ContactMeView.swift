@@ -22,7 +22,7 @@ struct ContactMeView: View {
                 // --- Row 1: Rate the App ---
                 Button(action: { requestReview() }) {
                     ContactRow(
-                        title: "Rate the app",
+                        title: "Rate this app",
                         icon: .symbol("heart.circle.fill"),
                         iconRenderingMode: .multicolor
                     )
@@ -46,7 +46,7 @@ struct ContactMeView: View {
                 // --- Row 3: Follow on Bilibili ---
                 Link(destination: URL(string: "https://space.bilibili.com/1442295892")!) {
                     ContactRow(
-                        title: "Follow on Bilibili",
+                        title: "Follow Me on Bilibili",
                         icon: .image("thumbnail_bilibili")
                     )
                 }

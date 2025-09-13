@@ -18,6 +18,7 @@ struct PreferencesView: View {
     @AppStorage("realTimeAlertsEnabled") private var realTimeAlertsEnabled: Bool = false
     @AppStorage("finishWorkoutAlertEnabled") private var finishWorkoutAlertEnabled: Bool = false
     @AppStorage("notificationFrequencyRawValue") private var notificationFrequencyRawValue: String = NotificationFrequency.normal.rawValue
+    @AppStorage("unitSystemPreference") private var unitSystem: UnitSystem = .systemDefault
     @AppStorage("userWeightKg") private var userWeightKg: Double = 70.0
     @AppStorage("userHeightCm") private var userHeightCm: Double = 170.0
 
@@ -53,16 +54,16 @@ struct PreferencesView: View {
                     Text("Done")
                         .foregroundStyle(Color.accent)
                 }
-                .padding(.horizontal, 6)
             }
             .padding(.top, 20)
             .padding(.bottom, 8)
-            .padding(.horizontal)
+            .padding(.horizontal, 22)
             
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     permissionsSection
                     profileSection
+                    unitsSection
                     notificationSection
                 }
                 .padding(.vertical)
@@ -87,12 +88,7 @@ struct PreferencesView: View {
     
     private var permissionsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Permissions")
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal)
-                .textCase(nil)
+            sectionHeader(title: "Permissions")
             
             VStack(spacing: 0) {
                 // location row
@@ -125,11 +121,7 @@ struct PreferencesView: View {
     private var profileSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("Profile")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(.secondary)
-                    .textCase(nil)
+                sectionHeader(title: "Profile")
                 
                 Spacer()
                 
@@ -146,9 +138,8 @@ struct PreferencesView: View {
                             .foregroundStyle(.gray)
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 32)
             }
-            .padding(.horizontal)
             
             VStack(spacing: 0) {
                 ProfileRow(title: "Body Weight (kg)", value: $userWeightKg, formatter: .decimalFormatter)
@@ -161,14 +152,58 @@ struct PreferencesView: View {
         }
     }
     
+    private var unitsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            sectionHeader(title: "Units")
+            
+            // The rounded group container
+            VStack(spacing: 0) {
+                // 1. REPLACE the Picker with a Menu
+                Menu {
+                    // 2. This is the content of the pop-up menu
+                    ForEach(UnitSystem.allCases, id: \.self) { system in
+                        Button {
+                            // Action: Update the AppStorage variable
+                            self.unitSystem = system
+                        } label: {
+                            HStack {
+                                Text(system.rawValue)
+                                if unitSystem == system {
+                                    Spacer()
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    // 3. This is the label for the menu, which is our full-width row
+                    HStack {
+                        Text("Measurement")
+                        
+                        Spacer()
+                        
+                        HStack {
+                            Text(unitSystem.rawValue)
+                            
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption.weight(.semibold))
+                        }
+                        .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 13)
+                }
+                .tint(.primary)
+            }
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(12)
+            .padding(.horizontal)
+        }
+    }
+    
     private var notificationSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Notifications")
-                .font(.subheadline)
-                .fontWeight(.medium)
-                .foregroundStyle(.secondary)
-                .textCase(nil)
-                .padding(.horizontal)
+            sectionHeader(title: "Notifications")
             
             VStack(spacing: 0) {
                 Toggle("Finish Workout Alert", isOn: $finishWorkoutAlertEnabled)
@@ -206,6 +241,15 @@ struct PreferencesView: View {
     }
 
     // MARK: - Helper Methods
+    
+    private func sectionHeader(title: String) -> some View {
+        Text(title)
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 22)
+            .textCase(nil)
+    }
 
     private func handleLocationRowTap() {
         let status = locationManager.authorisationStatus

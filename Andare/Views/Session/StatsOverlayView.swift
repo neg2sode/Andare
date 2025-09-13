@@ -11,13 +11,12 @@ import Combine
 
 struct StatsOverlayView: View {
     @ObservedObject var rideSessionManager: RideSessionManager
-    
-    @Environment(\.verticalSizeClass) var verticalSizeClass
+    @StateObject private var formatter = StatsFormatter.shared
     
     @State private var isExpanded: Bool = false
-    
-    private var formatter = StatsFormatter()
     private let slideOffset: CGFloat = 420
+    
+    @Environment(\.verticalSizeClass) var verticalSizeClass
     
     init(rideSessionManager: RideSessionManager) {
         self.rideSessionManager = rideSessionManager
@@ -48,7 +47,7 @@ struct StatsOverlayView: View {
             OverlayStatsBlock(
                 labelLine1: "AVERAGE",
                 labelLine2: "CADENCE",
-                stats: StatsFormatter.formatCadence(rideSessionManager.averageCadence, rideSessionManager.workoutType),
+                stats: formatter.formatCadence(rideSessionManager.averageCadence, rideSessionManager.workoutType),
                 valueToAnimate: rideSessionManager.averageCadence
             )
             
@@ -56,7 +55,7 @@ struct StatsOverlayView: View {
             OverlayStatsBlock(
                 labelLine1: "AVERAGE",
                 labelLine2: "SPEED",
-                stats: StatsFormatter.formatSpeed(rideSessionManager.averageSpeed),
+                stats: formatter.formatSpeed(rideSessionManager.averageSpeed),
                 valueToAnimate: rideSessionManager.averageSpeed
             )
             
@@ -64,7 +63,7 @@ struct StatsOverlayView: View {
             OverlayStatsBlock(
                 labelLine1: "ACTIVE",
                 labelLine2: "KILOCALORIES",
-                stats: StatsFormatter.formatEnergyBurned(rideSessionManager.activeCalories),
+                stats: formatter.formatEnergyBurned(rideSessionManager.activeCalories),
                 valueToAnimate: rideSessionManager.activeCalories
             )
             
@@ -72,7 +71,7 @@ struct StatsOverlayView: View {
             OverlayStatsBlock(
                 labelLine1: "ELEVATION",
                 labelLine2: "GAIN",
-                stats: StatsFormatter.formatElevation(rideSessionManager.elevationGain),
+                stats: formatter.formatElevation(rideSessionManager.elevationGain),
                 valueToAnimate: rideSessionManager.elevationGain
             )
             
@@ -80,7 +79,7 @@ struct StatsOverlayView: View {
             OverlayStatsBlock(
                 labelLine1: "DISTANCE",
                 labelLine2: "",
-                stats: StatsFormatter.formatDistance(rideSessionManager.totalDistance),
+                stats: formatter.formatDistance(rideSessionManager.totalDistance),
                 valueToAnimate: rideSessionManager.totalDistance
             )
         }
@@ -101,10 +100,10 @@ struct StatsOverlayView: View {
             if let startDate = rideSessionManager.startDate {
                 TimelineView(.periodic(from: startDate, by: 1.0)) { context in
                     let elapsedTime = context.date.timeIntervalSince(startDate)
-                    ElapsedTimeBlock(stats: StatsFormatter.formatDuration(elapsedTime))
+                    ElapsedTimeBlock(stats: formatter.formatDuration(elapsedTime))
                 }
             } else {
-                ElapsedTimeBlock(stats: StatsFormatter.formatDuration(0))
+                ElapsedTimeBlock(stats: formatter.formatDuration(0))
             }
             
             Spacer()
@@ -131,21 +130,21 @@ struct StatsOverlayView: View {
                 if let startDate = rideSessionManager.startDate {
                     TimelineView(.periodic(from: startDate, by: 1.0)) { context in
                         let elapsedTime = context.date.timeIntervalSince(startDate)
-                        ElapsedTimeBlock(stats: StatsFormatter.formatDuration(elapsedTime))
+                        ElapsedTimeBlock(stats: formatter.formatDuration(elapsedTime))
                     }
                 } else {
-                    ElapsedTimeBlock(stats: StatsFormatter.formatDuration(0))
+                    ElapsedTimeBlock(stats: formatter.formatDuration(0))
                 }
                 
-                OverlayStatsBlock(labelLine1: "AVERAGE", labelLine2: "CADENCE", stats: StatsFormatter.formatCadence(rideSessionManager.averageCadence, rideSessionManager.workoutType), valueToAnimate: rideSessionManager.averageCadence)
-                OverlayStatsBlock(labelLine1: "AVERAGE", labelLine2: "SPEED", stats: StatsFormatter.formatSpeed(rideSessionManager.averageSpeed), valueToAnimate: rideSessionManager.averageSpeed)
+                OverlayStatsBlock(labelLine1: "AVERAGE", labelLine2: "CADENCE", stats: formatter.formatCadence(rideSessionManager.averageCadence, rideSessionManager.workoutType), valueToAnimate: rideSessionManager.averageCadence)
+                OverlayStatsBlock(labelLine1: "AVERAGE", labelLine2: "SPEED", stats: formatter.formatSpeed(rideSessionManager.averageSpeed), valueToAnimate: rideSessionManager.averageSpeed)
             }
             
             // Second Column
             VStack(alignment: .leading, spacing: 8) {
-                OverlayStatsBlock(labelLine1: "ACTIVE", labelLine2: "KILOCALORIES", stats: StatsFormatter.formatEnergyBurned(rideSessionManager.activeCalories), valueToAnimate: rideSessionManager.activeCalories)
-                OverlayStatsBlock(labelLine1: "ELEVATION", labelLine2: "GAIN", stats: StatsFormatter.formatElevation(rideSessionManager.elevationGain), valueToAnimate: rideSessionManager.elevationGain)
-                OverlayStatsBlock(labelLine1: "DISTANCE", labelLine2: "", stats: StatsFormatter.formatDistance(rideSessionManager.totalDistance), valueToAnimate: rideSessionManager.totalDistance)
+                OverlayStatsBlock(labelLine1: "ACTIVE", labelLine2: "KILOCALORIES", stats: formatter.formatEnergyBurned(rideSessionManager.activeCalories), valueToAnimate: rideSessionManager.activeCalories)
+                OverlayStatsBlock(labelLine1: "ELEVATION", labelLine2: "GAIN", stats: formatter.formatElevation(rideSessionManager.elevationGain), valueToAnimate: rideSessionManager.elevationGain)
+                OverlayStatsBlock(labelLine1: "DISTANCE", labelLine2: "", stats: formatter.formatDistance(rideSessionManager.totalDistance), valueToAnimate: rideSessionManager.totalDistance)
             }
         }
         .frame(maxWidth: .infinity) // Allow the HStack to center itself

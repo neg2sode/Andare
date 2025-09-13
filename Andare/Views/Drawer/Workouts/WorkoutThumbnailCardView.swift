@@ -10,6 +10,8 @@ import SwiftData
 
 struct WorkoutThumbnailCardView: View {
     let workout: WorkoutDataModel
+    
+    @StateObject private var formatter = StatsFormatter.shared
 
     var body: some View {
         HStack(alignment: .top) {
@@ -49,7 +51,7 @@ struct WorkoutThumbnailCardView: View {
     private var primaryStat: String {
         // Show distance if it's meaningful, otherwise show duration.
         if workout.averageCadence != 0 {
-            let stats = StatsFormatter.formatCadence(workout.averageCadence, workout.workoutType)
+            let stats = formatter.formatCadence(workout.averageCadence, workout.workoutType)
             return stats.value + stats.unit.lowercased() + " avg."
         } else {
             let formatter = DateComponentsFormatter()
