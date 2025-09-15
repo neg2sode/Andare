@@ -10,6 +10,7 @@ import SwiftUI
 struct DrawerView: View {
     @State private var isShowingPreferences = false
     @State private var workoutsExpanded = false
+    @State private var gearIsRotating = false
     
     @StateObject var alertManager = AlertManager.shared
     
@@ -30,8 +31,17 @@ struct DrawerView: View {
                     Image(systemName: "gearshape.fill")
                         .imageScale(.large)
                         .foregroundStyle(Color.accentColor)
+                        .rotationEffect(.degrees(gearIsRotating ? 360 : 0))
+                        .animation(
+                            Animation.linear(duration: 10.24)
+                                .repeatForever(autoreverses: false),
+                            value: gearIsRotating
+                        )
                 }
                 .padding(.horizontal, 6)
+                .onAppear {
+                    gearIsRotating = true
+                }
             }
             .padding(.horizontal)
             .padding(.bottom, 12)
