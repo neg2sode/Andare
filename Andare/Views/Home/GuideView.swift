@@ -48,12 +48,14 @@ struct GuideView: View {
     let requestAuth: Bool
     let continueAction: () -> Void
     let cancelAction: () -> Void
+    let timer = Timer.publish(every: 1.28, on: .main, in: .common).autoconnect()
     
     private var guidance: WorkoutGuidance {
         .forType(workoutType)
     }
 
     @State private var hasAppeared = false
+    @State private var animateSymbol = false
     
     @StateObject private var locationManager = LocationManager.shared
     @StateObject private var healthKitManager = HealthKitManager.shared
@@ -69,75 +71,19 @@ struct GuideView: View {
                 .padding(.horizontal, 30)
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 30) {
-                    // 2. The new workout-specific guidance section
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Image(systemName: workoutType.sfSymbolName)
-                                .font(.headline)
-                                .foregroundStyle(Color.accentColor)
-                                .symbolEffect(.bounce, value: hasAppeared)
-                            
-                            Text(guidance.title)
-                                .font(.headline)
-                        }
-                        .opacity(hasAppeared ? 1 : 0)
-                        .animation(.easeIn(duration: 0.3), value: hasAppeared)
-                        
-                        ForEach(Array(guidance.points.enumerated()), id: \.offset) { index, point in
-                            Label(point, systemImage: "checkmark.circle.fill")
-                                .font(.subheadline)
-                                .foregroundStyle(.primary)
-                                .opacity(hasAppeared ? 1 : 0)
-                                .offset(y: hasAppeared ? 0 : 10)
-                                // Each item animates in with a progressive delay
-                                .animation(
-                                    .easeOut(duration: 0.4).delay(0.3 + Double(index) * 0.15),
-                                    value: hasAppeared
-                                )
-                        }
-                    }
-                    
-                    if workoutType != .walking {
-                        RiskWarningView()
-                            // This will now fade in after the points
-                            .opacity(hasAppeared ? 1 : 0)
-                            .animation(.easeIn(duration: 0.4).delay(0.7), value: hasAppeared)
-                    }
-                    
-                    if requestAuth {
-                        permissionSection
-                            // This fades in last
-                            .opacity(hasAppeared ? 1 : 0)
-                            .animation(.easeIn(duration: 0.4).delay(1.2), value: hasAppeared)
-                    }
-                }
-                .padding(.horizontal, 30)
+                mainContent
+                    .padding(.horizontal, 30)
             }
             
             Spacer()
 
-            // Buttons
-            VStack(spacing: 24) {
-                Button(action: continueAction) {
-                    Text("Let's Go")
-                        .font(.headline).fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .cornerRadius(16)
-                }
-                .disabled(requestAuth && !arePermissionsGranted)
-                .opacity(requestAuth && !arePermissionsGranted ? 0.5 : 1.0)
-                .animation(.easeInOut, value: arePermissionsGranted)
-                
-                Button("I'm not Ready", action: cancelAction)
-                    .font(.headline).fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-            }
-            .padding(.horizontal, 30)
-            .padding(.bottom)
+            footerButtons
+                .padding(.horizontal, 30)
+                .padding(.bottom)
+        }
+        .onReceive(timer) { _ in
+            guard hasAppeared else { return }
+            animateSymbol.toggle()
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
@@ -151,6 +97,52 @@ struct GuideView: View {
     }
     
     // MARK: - Subviews
+    
+    private var mainContent: some View {
+        VStack(alignment: .leading, spacing: 30) {
+            // 2. The new workout-specific guidance section
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Image(systemName: workoutType.sfSymbolName)
+                        .font(.headline)
+                        .foregroundStyle(Color.accentColor)
+                        .symbolEffect(.bounce.byLayer, options: .speed(1.28), value: animateSymbol)
+                    
+                    Text(guidance.title)
+                        .font(.headline)
+                }
+                .opacity(hasAppeared ? 1 : 0)
+                .animation(.easeIn(duration: 0.3), value: hasAppeared)
+                
+                ForEach(Array(guidance.points.enumerated()), id: \.offset) { index, point in
+                    Label(point, systemImage: "checkmark.circle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.primary)
+                        .opacity(hasAppeared ? 1 : 0)
+                        .offset(y: hasAppeared ? 0 : 10)
+                        // Each item animates in with a progressive delay
+                        .animation(
+                            .easeOut(duration: 0.4).delay(0.3 + Double(index) * 0.15),
+                            value: hasAppeared
+                        )
+                }
+            }
+            
+            if workoutType != .walking {
+                RiskWarningView()
+                    // This will now fade in after the points
+                    .opacity(hasAppeared ? 1 : 0)
+                    .animation(.easeIn(duration: 0.4).delay(0.7), value: hasAppeared)
+            }
+            
+            if requestAuth {
+                permissionSection
+                    // This fades in last
+                    .opacity(hasAppeared ? 1 : 0)
+                    .animation(.easeIn(duration: 0.4).delay(1.2), value: hasAppeared)
+            }
+        }
+    }
     
     private var permissionSection: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -172,6 +164,27 @@ struct GuideView: View {
                 status: healthKitManager.authorisationStatus.permissionStatus,
                 action: { Task { try? await healthKitManager.requestAuthorisation() } }
             )
+        }
+    }
+    
+    private var footerButtons: some View {
+        VStack(spacing: 24) {
+            Button(action: continueAction) {
+                Text("Let's Go")
+                    .font(.headline).fontWeight(.semibold)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.accentColor)
+                    .cornerRadius(16)
+            }
+            .disabled(requestAuth && !arePermissionsGranted)
+            .opacity(requestAuth && !arePermissionsGranted ? 0.5 : 1.0)
+            .animation(.easeInOut, value: arePermissionsGranted)
+            
+            Button("I'm not Ready", action: cancelAction)
+                .font(.headline).fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
         }
     }
     
