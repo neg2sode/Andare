@@ -23,7 +23,7 @@ struct HomeView: View {
     @State private var isShowingLocationWarning = false
     @State private var sessionState: SessionState = .idle
     
-    private let timer = Timer.publish(every: 1.2, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 1.28, on: .main, in: .common).autoconnect()
     
     @Environment(\.modelContext) private var modelContext
     

@@ -57,6 +57,7 @@ struct GuideView: View {
     @State private var hasAppeared = false
     @State private var animateSymbol = false
     
+    @StateObject private var alertManager = AlertManager()
     @StateObject private var locationManager = LocationManager.shared
     @StateObject private var healthKitManager = HealthKitManager.shared
     

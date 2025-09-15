@@ -12,7 +12,7 @@ struct DrawerView: View {
     @State private var workoutsExpanded = false
     @State private var gearIsRotating = false
     
-    @StateObject var alertManager = AlertManager.shared
+    @StateObject private var alertManager = AlertManager.shared
     
     @EnvironmentObject var drawerState: DrawerState
     @EnvironmentObject var pagingState: WorkoutPagingState

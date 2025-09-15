@@ -25,7 +25,7 @@ struct PreferencesView: View {
     @State private var showingLocationWarningDetail = false
     @State private var healthKitProfileLinked = false
     
-    @StateObject var alertManager = AlertManager()
+    @StateObject private var alertManager = AlertManager()
     @StateObject private var locationManager = LocationManager.shared
     @StateObject private var healthKitManager = HealthKitManager.shared
     @StateObject private var notificationManager = NotificationManager.shared
@@ -69,6 +69,7 @@ struct PreferencesView: View {
                 .padding(.vertical)
             }
         }
+        .sheet(isPresented: $showingLocationWarningDetail) { LocationWarningDetailView() }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .onAppear {
             self.healthKitProfileLinked = healthKitManager.profileCharacteristicsAuthorised()
@@ -95,7 +96,6 @@ struct PreferencesView: View {
                 Button(action: handleLocationRowTap) {
                     PermissionRow(title: "Location", status: locationManager.authorisationStatus.permissionStatus)
                 }
-                .sheet(isPresented: $showingLocationWarningDetail) { LocationWarningDetailView() }
                 
                 Divider().padding(.leading)
                 
