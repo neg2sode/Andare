@@ -125,18 +125,28 @@ struct WorkoutSummaryView: View {
         VStack {
             Spacer()
             if isDoneButtonVisible {
-                Button(action: { dismiss() }) {
-                    Text("Done")
-                        .font(.headline).fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .cornerRadius(16)
+                ZStack {
+                    if #available(iOS 26.0, *) {
+                        Button(action: { dismiss() }) {
+                            Text("Done")
+                                .font(.headline).fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.glassProminent)
+                        .controlSize(.large)
+                    } else {
+                        Button(action: { dismiss() }) {
+                            Text("Done")
+                                .font(.headline).fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .shadow(radius: 5)
+                        .controlSize(.large)
+                    }
                 }
                 .padding(.horizontal, 30)
                 .padding(.bottom)
-                .shadow(radius: 5)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -174,7 +184,7 @@ struct WorkoutSummaryView: View {
         }
         .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 20)
                 .fill(Color(UIColor.secondarySystemGroupedBackground))
         )
     }
@@ -260,7 +270,7 @@ struct WorkoutSummaryView: View {
         }
         .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 20)
                 .fill(Color(UIColor.secondarySystemGroupedBackground))
         )
     }
@@ -308,7 +318,7 @@ struct WorkoutSummaryView: View {
                     .padding(.vertical, 12)
                     .padding(.horizontal)
                     .background(Color.orange.opacity(0.1))
-                    .cornerRadius(16)
+                    .cornerRadius(20)
             
             case .hidden:
                 EmptyView()

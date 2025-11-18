@@ -29,8 +29,14 @@ struct ArticleDetailView: View {
         .navigationBarTitleDisplayMode(.inline) // Keep title inline like screenshot
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Done") {
-                    dismiss() // Call dismiss action
+                if #available(iOS 26.0, *) {
+                    Button(role: .close) {
+                        dismiss() // Call dismiss action
+                    }
+                } else {
+                    Button("Done") {
+                        dismiss() // Call dismiss action
+                    }
                 }
             }
         }

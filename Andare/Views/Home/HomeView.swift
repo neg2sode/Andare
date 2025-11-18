@@ -205,7 +205,7 @@ struct HomeView: View {
             StatsOverlayView(rideSessionManager: rideSessionManager)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .offset(y: -40)
-                
+          
             VStack {
                 Spacer()
                 Button(action: stopWorkout) {
@@ -213,12 +213,11 @@ struct HomeView: View {
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
-                        .padding()
                 }
                 .background(Color.red)
-                .cornerRadius(24)
+                .cornerRadius(30)
                 .shadow(radius: 5)
-                .padding(.horizontal)
+                .padding(.horizontal, 30)
                 .padding(.bottom, 12)
             }
         }

@@ -41,7 +41,7 @@ struct WorkoutThumbnailCardView: View {
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: .black.opacity(0.08), radius: 1, y: 1)
         .shadow(color: .black.opacity(0.1), radius: 4, y: 0)
     }

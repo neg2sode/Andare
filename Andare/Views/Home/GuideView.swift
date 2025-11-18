@@ -71,10 +71,8 @@ struct GuideView: View {
                 .padding(.top, 50)
                 .padding(.horizontal, 30)
 
-            ScrollView {
-                mainContent
-                    .padding(.horizontal, 30)
-            }
+            mainContent
+                .padding(.horizontal, 30)
             
             Spacer()
 
@@ -177,7 +175,7 @@ struct GuideView: View {
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(Color.accentColor)
-                    .cornerRadius(16)
+                    .cornerRadius(30)
             }
             .disabled(requestAuth && !arePermissionsGranted)
             .opacity(requestAuth && !arePermissionsGranted ? 0.5 : 1.0)
@@ -222,7 +220,7 @@ struct RiskWarningView: View {
         }
         .padding()
         .background(Color.orange.opacity(0.15))
-        .cornerRadius(12)
+        .cornerRadius(20)
         .scaleEffect(hasAppeared ? 1.0 : 0.95)
         .onAppear {
             // A slight delay makes the pulse feel more intentional and separated
@@ -267,9 +265,17 @@ struct PermissionGuideRow: View {
             Spacer()
             
             if status == .notDetermined {
-                Button("Grant", action: action)
-                    .buttonStyle(.bordered)
-                    .tint(.accentColor)
+                if #available(iOS 26.0, *) {
+                    Button(action: action) {
+                        Text("Grant")
+                            .foregroundStyle(Color.accentColor)
+                    }
+                    .buttonStyle(.glass(.regular.tint(Color.accentColor.opacity(0.3)).interactive()))
+                } else {
+                    Button("Grant", action: action)
+                        .buttonStyle(.bordered)
+                        .tint(.accentColor)
+                }
             } else {
                 Image(systemName: status.iconName)
                     .font(.title2).foregroundStyle(status.iconColour)

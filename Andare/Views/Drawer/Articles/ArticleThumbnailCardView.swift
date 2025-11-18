@@ -32,7 +32,7 @@ struct ArticleThumbnailCardView: View {
         }
         // Styling for the card itself
         .background(Color(.secondarySystemGroupedBackground)) // Subtle background color
-        .cornerRadius(10)
+        .cornerRadius(20)
         .shadow(radius: 3, x: 0, y: 2) // Optional shadow
         .padding(.vertical, 8) // Space between cards
     }

@@ -45,19 +45,26 @@ struct PreferencesView: View {
                 Text("Preferences")
                     .font(.title)
                     .fontWeight(.bold)
+                    .padding(.horizontal, 22)
                 
                 Spacer()
                 
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Done")
-                        .foregroundStyle(Color.accent)
+                if #available(iOS 26.0, *) {
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "checkmark")
+                            .font(.title2)
+                            .frame(maxWidth: 20, maxHeight: 30)
+                    }
+                    .buttonStyle(.glassProminent)
+                    .padding(.horizontal, 18)
+                } else {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .padding(.horizontal, 22)
                 }
             }
             .padding(.top, 20)
-            .padding(.bottom, 8)
-            .padding(.horizontal, 22)
             
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -69,19 +76,19 @@ struct PreferencesView: View {
                 .padding(.vertical)
             }
         }
-        .sheet(isPresented: $showingLocationWarningDetail) { LocationWarningDetailView() }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
+        .sheet(isPresented: $showingLocationWarningDetail) { LocationWarningDetailView() }
         .onAppear {
             self.healthKitProfileLinked = healthKitManager.profileCharacteristicsAuthorised()
             notificationManager.refreshStatus()
         }
         .alert(alertManager.title, isPresented: $alertManager.isPresenting) {
             if alertManager.showSettingsButton {
-                 Button("Open Settings") { UIApplication.openAppSettings() }
-                 Button("Cancel", role: .cancel) { }
-             } else {
-                 Button("OK", role: .cancel) { }
-             }
+                Button("Open Settings") { UIApplication.openAppSettings() }
+                Button("Cancel", role: .cancel) { }
+            } else {
+                Button("OK", role: .cancel) { }
+            }
         } message: {
             Text(alertManager.message)
         }
@@ -113,7 +120,7 @@ struct PreferencesView: View {
             }
             .buttonStyle(.plain) // Apply to all buttons within
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(20)
             .padding(.horizontal)
         }
     }
@@ -147,7 +154,7 @@ struct PreferencesView: View {
                 ProfileRow(title: "Height (cm)", value: $userHeightCm, formatter: .decimalFormatter)
             }
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(20)
             .padding(.horizontal)
         }
     }
@@ -196,7 +203,7 @@ struct PreferencesView: View {
                 .tint(.primary)
             }
             .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cornerRadius(20)
             .padding(.horizontal)
         }
     }
@@ -235,7 +242,7 @@ struct PreferencesView: View {
                     .padding(.vertical, 13)
                 }
             }
-            .background(Color(.secondarySystemGroupedBackground)).cornerRadius(12).padding(.horizontal)
+            .background(Color(.secondarySystemGroupedBackground)).cornerRadius(20).padding(.horizontal)
             .animation(.easeInOut(duration: 0.2), value: realTimeAlertsEnabled)
         }
     }

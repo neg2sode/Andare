@@ -54,7 +54,7 @@ struct StartWorkoutButtonView: View {
                     .opacity(tapOpacity)
                     .offset(y: tapOffset)
                     .zIndex(tapZ)
-
+                
                 // SWIPE banner
                 Text("Swipe for other workouts")
                     .font(.system(size: 25))
@@ -66,20 +66,32 @@ struct StartWorkoutButtonView: View {
             }
             .frame(height: 56)
             .clipped()
-
-            // The button area (unchanged)
-            Button(action: { self.action(self.workoutType) }) {
-                ZStack {
-                    Circle()
-                        .fill(Color.accentColor)
-                        .shadow(radius: 10)
-
-                    Image(systemName: workoutType.sfSymbolName)
-                        .font(.system(size: 70, weight: .light))
-                        .foregroundStyle(.white)
+            
+            ZStack {
+                if #available(iOS 26.0, *) {
+                    Button(action: { self.action(self.workoutType) }) {
+                        Image(systemName: workoutType.sfSymbolName)
+                            .font(.system(size: 70, weight: .light))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: 170, maxHeight: 180)
+                    }
+                    .buttonStyle(.glassProminent)
+                    .shadow(radius: 8)
+                } else {
+                    Button(action: { self.action(self.workoutType) }) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.accentColor)
+                                .shadow(radius: 8)
+                            
+                            Image(systemName: workoutType.sfSymbolName)
+                                .font(.system(size: 70, weight: .light))
+                                .foregroundStyle(.white)
+                        }
+                    }
+                    .frame(width: 200, height: 200)
                 }
             }
-            .frame(width: 200, height: 200)
             .scaleEffect(isAnimating ? 1.08 : 1.0)
             .animation(.easeInOut(duration: 1.28).repeatForever(autoreverses: true), value: isAnimating)
             .onAppear {

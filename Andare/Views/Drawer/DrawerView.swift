@@ -21,7 +21,7 @@ struct DrawerView: View {
         VStack(spacing: 0) {
             // MARK: - Drawer Header
             HStack {
-                Text("Andare Dev v1.8.2")
+                Text("Andare Dev v1.8.3")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
@@ -29,7 +29,7 @@ struct DrawerView: View {
                 
                 Button(action: { isShowingPreferences = true }) {
                     Image(systemName: "gearshape.fill")
-                        .imageScale(.large)
+                        .font(.system(size: 25))
                         .foregroundStyle(Color.accentColor)
                         .rotationEffect(.degrees(gearIsRotating ? 360 : 0))
                         .animation(
@@ -83,7 +83,7 @@ struct DrawerView: View {
         .background(Color(.systemGroupedBackground))
         .sheet(isPresented: $isShowingPreferences) {
             PreferencesView()
-                .presentationDetents([.fraction(0.7), .large])
+                .presentationDetents([.fraction(0.75), .large])
                 .presentationDragIndicator(.hidden)
         }
         .alert(alertManager.title, isPresented: $alertManager.isPresenting) {
