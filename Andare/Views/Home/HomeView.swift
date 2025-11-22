@@ -213,8 +213,9 @@ struct HomeView: View {
                         Text("Stop Workout")
                             .font(.title2.weight(.semibold))
                             .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity, maxHeight: 60)
+                            .frame(maxWidth: .infinity)
                     }
+                    .controlSize(.extraLarge)
                     .buttonStyle(.glassProminent)
                     .tint(.red)
                     .padding(.horizontal, 30)
@@ -224,8 +225,9 @@ struct HomeView: View {
                         Text("Stop Workout")
                             .font(.title2.weight(.semibold))
                             .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity, maxHeight: 60)
+                            .frame(maxWidth: .infinity)
                     }
+                    .controlSize(.extraLarge)
                     .background(Color.red)
                     .cornerRadius(30)
                     .shadow(radius: 5)
@@ -379,7 +381,7 @@ struct LockScreenNudgeView: View {
                         .foregroundStyle(.primary)
                         .offset(x: isJumping ? 10 : 0)
                     
-                    Text("Lock your screen safely\nStarting workout in no time")
+                    Text("Lock your screen safely\nWorkout starting")
                         .font(.title3)
                         .fontWeight(.medium)
                         .multilineTextAlignment(.trailing)

@@ -90,8 +90,8 @@ struct LocationWarningDetailView: View {
                             .font(.headline).fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
                     }
+                    .controlSize(.extraLarge)
                     .buttonStyle(.glassProminent)
-                    .controlSize(.large)
                 } else {
                     Button {
                         UIApplication.openAppSettings()
@@ -101,9 +101,9 @@ struct LocationWarningDetailView: View {
                             .font(.headline).fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
                     }
+                    .controlSize(.extraLarge)
                     .buttonStyle(.borderedProminent)
                     .shadow(radius: 5)
-                    .controlSize(.large)
                 }
 
                 Button {

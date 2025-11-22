@@ -22,6 +22,32 @@ struct StatsOverlayView: View {
         self.rideSessionManager = rideSessionManager
     }
     
+    // MARK: - Gesture
+    
+    private var panelSwipeGesture: some Gesture {
+        DragGesture(minimumDistance: 5, coordinateSpace: .local)
+            .onEnded { value in
+                handleSwipe(translation: value.translation.height)
+            }
+    }
+    
+    private func handleSwipe(translation: CGFloat) {
+        let threshold: CGFloat = 10
+        
+        // Swipe down (positive translation) when collapsed -> expand
+        // Swipe up (negative translation) when expanded -> collapse
+        let shouldToggle = (!isExpanded && translation > threshold) || 
+                          (isExpanded && translation < -threshold)
+        
+        if shouldToggle {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.9)) {
+                isExpanded.toggle()
+            }
+        }
+    }
+    
+    // MARK: - Body
+    
     var body: some View {
         if verticalSizeClass == .regular {
             ZStack(alignment: .top) {
@@ -31,8 +57,10 @@ struct StatsOverlayView: View {
                 portraitLayout
                     .offset(y: isExpanded ? slideOffset : 0)
             }
-            .clipped() // hides content that slides outside the frame
-            .animation(.spring(response: 0.4, dampingFraction: 0.9), value: isExpanded)
+            .clipped()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .simultaneousGesture(panelSwipeGesture)
         } else {
             landscapeLayout
         }
