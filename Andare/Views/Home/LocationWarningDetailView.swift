@@ -10,6 +10,9 @@ import SwiftUI
 struct LocationWarningDetailView: View {
     @Environment(\.dismiss) var dismiss
     @AppStorage("showLocationWarningPreference") private var showLocationWarningPreference = true
+    @State private var bounceMetronome = false
+    @State private var bounceBell = false
+    @State private var bounceMap = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,6 +31,7 @@ struct LocationWarningDetailView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Label("Cadence Monitoring Continuity", systemImage: "metronome")
                                 .font(.body)
+                                .symbolEffect(.bounce.byLayer, options: .speed(2.56), value: bounceMetronome)
                             
                             Text("Ensures your cadence data remains continuous even when the app is running in the background.")
                                 .font(.subheadline)
@@ -37,6 +41,7 @@ struct LocationWarningDetailView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Label("Real‑Time Alerts", systemImage: "bell")
                                 .font(.body)
+                                .symbolEffect(.bounce.byLayer, options: .speed(2.56), value: bounceBell)
                             
                             Text("Get timely notifications for cadence zones.")
                                 .font(.subheadline)
@@ -46,6 +51,7 @@ struct LocationWarningDetailView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Label("Route Mapping & Stats", systemImage: "map")
                                 .font(.body)
+                                .symbolEffect(.bounce.byLayer, options: .speed(2.56), value: bounceMap)
                             
                             Text("Track your distance, speed, and elevation gain on detailed maps.")
                                 .font(.subheadline)
@@ -113,6 +119,25 @@ struct LocationWarningDetailView: View {
             .padding(.horizontal, 30)
             .padding(.bottom)
             .background(Color(.systemBackground))
+        }
+        .task {
+            // Sequential bounce animation with pause between cycles
+            while !Task.isCancelled {
+                // Bounce metronome
+                bounceMetronome.toggle()
+                try? await Task.sleep(for: .seconds(0.5))
+                
+                // Bounce bell
+                bounceBell.toggle()
+                try? await Task.sleep(for: .seconds(0.5))
+                
+                // Bounce map
+                bounceMap.toggle()
+                try? await Task.sleep(for: .seconds(0.5))
+                
+                // Pause before next cycle
+                try? await Task.sleep(for: .seconds(1.5))
+            }
         }
     }
 }

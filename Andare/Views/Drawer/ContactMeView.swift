@@ -13,7 +13,7 @@ struct ContactMeView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Contact Me")
+            Text("Contact The Developer")
                 .font(.title)
                 .fontWeight(.bold)
                 .padding(.horizontal)
