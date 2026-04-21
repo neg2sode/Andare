@@ -21,7 +21,7 @@ struct DrawerView: View {
         VStack(spacing: 0) {
             // MARK: - Drawer Header
             HStack {
-                Text("Andare Dev v1.8.2")
+                Text("Andare")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                 
