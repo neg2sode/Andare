@@ -1,0 +1,104 @@
+{
+  "fill" : {
+    "automatic-gradient" : "display-p3:0.00000,0.56078,0.46275,1.00000"
+  },
+  "groups" : [
+    {
+      "blend-mode-specializations" : [
+        {
+          "value" : "normal"
+        },
+        {
+          "appearance" : "dark",
+          "value" : "normal"
+        }
+      ],
+      "blur-material" : 0.5,
+      "hidden" : false,
+      "layers" : [
+        {
+          "blend-mode" : "normal",
+          "fill-specializations" : [
+            {
+              "value" : "none"
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "automatic-gradient" : "display-p3:0.00000,0.74902,0.64706,1.00000"
+              }
+            }
+          ],
+          "image-name" : "shoeprints.fill.png",
+          "name" : "shoeprints.fill",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 0.55,
+            "translation-in-points" : [
+              -20,
+              30
+            ]
+          }
+        }
+      ],
+      "lighting" : "individual",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.65
+      }
+    },
+    {
+      "blend-mode" : "normal",
+      "blur-material" : 0.5,
+      "layers" : [
+        {
+          "fill" : "none",
+          "image-name" : "sun.fill.png",
+          "name" : "sun.fill",
+          "position" : {
+            "scale" : 0.35,
+            "translation-in-points" : [
+              143,
+              -287
+            ]
+          }
+        },
+        {
+          "fill" : "none",
+          "glass" : true,
+          "image-name" : "haze.fill.png",
+          "name" : "haze.fill",
+          "opacity" : 0.6,
+          "position" : {
+            "scale" : 0.3,
+            "translation-in-points" : [
+              100,
+              -63
+            ]
+          }
+        }
+      ],
+      "lighting" : "combined",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular" : true,
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.15
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
