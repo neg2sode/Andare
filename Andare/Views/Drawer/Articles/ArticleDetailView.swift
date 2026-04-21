@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Charts
 
 struct ArticleDetailView: View {
     let article: Article
@@ -45,58 +46,110 @@ struct ArticleDetailView: View {
                 .font(.largeTitle.weight(.bold))
             
             switch article.title {
-            case "Understanding Cadence":
+            case "Conquering Hills":
 
-                // Section 1: What is Cadence?
+                Text("Hills change everything. On an uphill, gravity works against you. On a downhill, momentum takes over. Your natural rhythm gets disrupted either way.")
+
+                // Section 1: Going Up
                 VStack(alignment: .leading, spacing: 8) { // Use this spacing for within the section (title <-> body)
-                    Text("What is Cadence?")
-                        .font(.title2.weight(.bold)) // Make subtitle slightly bolder
-                    Text("Cadence is the rhythm of your movement, measured in steps (SPM) or revolutions (RPM) per minute. It's the tempo of your workout.")
-                } // End Section 1
-                
-                // TODO: Placeholder for the "Efficiency Curve" chart
-                // We can add a custom, hardcoded chart view here later.
-                // EfficiencyCurveChartView()
+                    HStack(spacing: 8) {
+                        Image(systemName: "arrow.up.right")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(Color.accentColor)
 
-                // Section 2: Why 70-90 RPM?
+                        Text("Going Up")
+                            .font(.title3.weight(.semibold))
+                    }
+
+                    Text("When you hit an uphill, resist the urge to push harder gears or take longer strides. Instead, shift to a lighter gear (cycling) or shorten your stride (running). Keep your cadence steady or even slightly higher than usual.")
+                } // End Section 1
+
+                tipBox(
+                    icon: "lightbulb.fill",
+                    text: "On climbs, aim for quicker and lighter movements rather than powerful ones."
+                )
+
+                // Section 2: Going Down
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("The Efficiency Sweet Spot")
-                        .font(.title2.weight(.bold))
-                    Text("For any given speed, there's an optimal cadence that minimizes oxygen consumption and muscular fatigue. This 'sweet spot' is different for everyone and for each activity.")
+                    HStack(spacing: 8) {
+                        Image(systemName: "arrow.down.right")
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(Color.accentColor)
+
+                        Text("Going Down")
+                            .font(.title3.weight(.semibold))
+                    }
+
+                    Text("Downhills feel easy, but they're deceptively demanding on your joints for running and walking. The impact forces increase, and it's tempting to let your cadence drop as gravity does the work.")
                 } // End Section 2
 
-                // Section 3: Finding Your Cadence
+                tipBox(
+                    icon: "lightbulb.fill",
+                    text: "On descents, quick and controlled steps keep you in control. Or let go of the pedal if you're on a bike."
+                )
+
+                // Section 3: The Key Insight
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Finding Your Natural Cadence")
-                         .font(.title2.weight(.bold))
-                     Text("Everyone is different. Use this app to see your current cadence and experiment with slightly faster or slower rhythms to find what feels comfortable and sustainable for you.")
+                    Text("The Key Insight")
+                         .font(.title3.weight(.semibold))
+                     Text("Whether going up or down, the goal is the same: **keep your rhythm consistent**. Let the terrain change around you while your cadence stays stable.")
                 } // End Section 3
 
 
-            case "Cadence and Joint Health":
+            case "The Power of Consistency":
 
-                // Section 1: Knee Strain Connection
+                Text("A single workout won't make or break you. But consistent workouts over years? That's where rhythm habits compound, for better or worse.")
+
+                // Section 1: What Research Suggests
                  VStack(alignment: .leading, spacing: 8) {
-                    Text("The Knee Strain Connection")
-                        .font(.title2.weight(.bold))
-                    Text("Every step or pedal stroke places a force on your joints, especially your knees and ankles. Pushing hard gears at a very low cadence (below 60 RPM) requires significant force from your leg muscles with each pedal stroke. This force translates to high pressure on your knee joint.")
-                } // End Section 1
-                
-                // TODO: Placeholder for the "Joint Stress vs. Cadence" chart
-                // JointStressChartView()
+                    Text("What Research Suggests")
+                        .font(.title3.weight(.semibold))
+                    Text("Research on gait and cycling shows that your body naturally settles into an efficient rhythm where energy expenditure is minimized. This freely chosen cadence (FCC) reflects your body's attempt to optimize.")
 
-                // Section 2: How Higher Cadence Helps
+                    Text("Research also shows that the contribution of different muscle groups changes with cadence. At lower cadences, your ankles do most of the work. At higher cadences, the effort becomes more evenly distributed across hips, knees, and ankles.")
+                } // End Section 1
+
+                // Section 2: Why Consistency Matters
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("The Benefit of a Quicker Tempo")
-                        .font(.title2.weight(.bold))
-                    Text("By increasing your cadence slightly, you reduce the force of each individual movement, which can significantly lower the overall stress on your knees and hips over the course of a workout.")
+                    Text("Why Consistency Matters")
+                        .font(.title3.weight(.semibold))
+                    Text("Constantly cycling in hard gears, or alternating between too fast and too slow cadences create uneven stress on your joints. Over months and years, this adds up.")
                 } // End Section 2
 
-                 // Section 3: Listen to Your Body
+                tipBox(
+                    icon: "repeat",
+                    text: "Use Andare to know your natural cadence."
+                )
+
+
+            case "Fatigue & Perceived Effort":
+
+                Text("The same pace feels different depending on how tired you are.")
+
+                // Section 1: What's Actually Happening
                  VStack(alignment: .leading, spacing: 8) {
-                    Text("Listen to Your Body")
-                         .font(.title2.weight(.bold))
-                     Text("While cadence is important, proper form and listening to any pain signals are crucial. If you experience persistent joint pain, it's always best to consult a professional.")
+                    Text("What's Actually Happening")
+                        .font(.title3.weight(.semibold))
+                    Text("As you exercise, your muscles accumulate fatigue. Your central nervous system also becomes harder to recruit muscle fibers and maintain the same output.")
+                } // End Section 1
+
+                // Section 2: The Cadence Connection
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("The Cadence Connection")
+                        .font(.title3.weight(.semibold))
+                    Text("When you're fatigued, it's tempting to slow your cadence and push harder with each movement. But this loops back! Slower, harder movements increase stress on fatigued muscles and joints.")
+                } // End Section 2
+
+                tipBox(
+                    icon: "lightbulb.fill",
+                    text: "When fatigue hits, maintain your cadence but reduce your power output. Spin easier gears or take lighter steps."
+                )
+
+                 // Section 3: Trust Your Rhythm
+                 VStack(alignment: .leading, spacing: 8) {
+                    Text("Trust Your Rhythm")
+                         .font(.title3.weight(.semibold))
+                     Text("By maintaining consistent cadence even when tired, you work with your body's natural efficiency rather than against it.")
                 } // End Section 3
 
 
@@ -105,5 +158,21 @@ struct ArticleDetailView: View {
             }
         }
         .padding(.bottom, 30)
+    }
+
+    // MARK: - Helper Views
+
+    private func tipBox(icon: String, text: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(Color.accentColor)
+            Text(text)
+                .font(.callout)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.tertiarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }

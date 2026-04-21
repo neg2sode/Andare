@@ -49,6 +49,7 @@ struct GuideView: View {
     let continueAction: () -> Void
     let cancelAction: () -> Void
     let timer = Timer.publish(every: 1.28, on: .main, in: .common).autoconnect()
+    let rotateTimer = Timer.publish(every: 2.4, on: .main, in: .common).autoconnect()
     
     private var guidance: WorkoutGuidance {
         .forType(workoutType)
@@ -56,6 +57,7 @@ struct GuideView: View {
 
     @State private var hasAppeared = false
     @State private var animateSymbol = false
+    @State private var rotatePhone = false
     
     @StateObject private var alertManager = AlertManager()
     @StateObject private var locationManager = LocationManager.shared
@@ -86,6 +88,10 @@ struct GuideView: View {
             guard hasAppeared else { return }
             animateSymbol.toggle()
         }
+        .onReceive(rotateTimer) { _ in
+            guard hasAppeared else { return }
+            rotatePhone.toggle()
+        }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 healthKitManager.refreshStatus()
@@ -94,6 +100,9 @@ struct GuideView: View {
         .onAppear {
             hasAppeared = true
             healthKitManager.refreshStatus()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                rotatePhone = true
+            }
         }
     }
     
@@ -101,6 +110,11 @@ struct GuideView: View {
     
     private var mainContent: some View {
         VStack(alignment: .leading, spacing: 30) {
+            // Animation area - workout icon with iPhone
+            animationSection
+                .frame(maxWidth: .infinity)
+                .frame(height: 200)
+            
             // 2. The new workout-specific guidance section
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
@@ -142,6 +156,38 @@ struct GuideView: View {
                     .opacity(hasAppeared ? 1 : 0)
                     .animation(.easeIn(duration: 0.4).delay(1.2), value: hasAppeared)
             }
+        }
+    }
+    
+    private var animationSection: some View {
+        ZStack {
+            // Bouncing workout icon
+            Image(systemName: workoutType.sfSymbolName)
+                .font(.system(size: 120))
+                .foregroundStyle(Color.accentColor.opacity(0.3))
+                .symbolEffect(.bounce, value: animateSymbol)
+            
+            // iPhone positioned at hip area with rotate animation
+            Image(systemName: "iphone")
+                .font(.system(size: 30))
+                .foregroundStyle(Color.accentColor)
+                .symbolEffect(.rotate, value: rotatePhone)
+                .offset(phoneOffset)
+        }
+        .opacity(hasAppeared ? 1 : 0)
+        .scaleEffect(hasAppeared ? 1 : 0.9)
+        .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.1), value: hasAppeared)
+    }
+    
+    /// iPhone position relative to workout figure
+    private var phoneOffset: CGSize {
+        switch workoutType {
+        case .cycling:
+            return CGSize(width: -10, height: -13)
+        case .running:
+            return CGSize(width: 50, height: -18)
+        case .walking:
+            return CGSize(width: 7, height: 30)
         }
     }
     

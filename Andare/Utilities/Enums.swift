@@ -7,12 +7,22 @@
 
 import Foundation
 import CoreLocation
+import SwiftUI
 
 enum CadenceZone: String, Codable {
     case low = "Low"
     case normal = "Normal"
     case high = "High"
     case zero = "Zero"
+    
+    var color: Color {
+        switch self {
+        case .low: return Color("lowCadenceColour")
+        case .normal: return Color("cadenceColour")
+        case .high: return Color("highCadenceColour")
+        case .zero: return .gray
+        }
+    }
 
     // Helper to determine zone
     static func zone(for cadence: Double, workoutType: WorkoutType) -> CadenceZone {
@@ -120,19 +130,22 @@ enum WorkoutType: String, CaseIterable, Identifiable, Codable {
             return WorkoutCadenceInfo(
                 range: (min: 20, max: 150),
                 cutoffs: (low: 60, high: 110),
-                threshold: 2993.633414
+                threshold: 2993.633414,
+                unit: "RPM"
             )
         case .running:
             return WorkoutCadenceInfo(
                 range: (min: 100, max: 240),
                 cutoffs: (low: 160, high: 200),
-                threshold: 1885.868061
+                threshold: 1885.868061,
+                unit: "SPM"
             )
         case .walking:
             return WorkoutCadenceInfo(
                 range: (min: 60, max: 160),
                 cutoffs: nil,
-                threshold: 2842.008795
+                threshold: 2842.008795,
+                unit: "SPM"
             )
         }
     }
@@ -161,6 +174,7 @@ struct WorkoutCadenceInfo {
     let range: (min: Double, max: Double)
     let cutoffs: (low: Double, high: Double)?
     let threshold: Float
+    let unit: String
 }
 
 enum UnitSystem: String, Codable, CaseIterable {

@@ -37,6 +37,7 @@ struct WorkoutSummaryView: View {
 
     @State private var isDoneButtonVisible = false
     @State private var isShowingFullMap = false
+    @State private var isBouncing = false
     @State private var mapCameraPosition: MapCameraPosition
     
     @StateObject private var formatter = StatsFormatter.shared
@@ -99,6 +100,7 @@ struct WorkoutSummaryView: View {
     private var scrollableContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 25) {
+                cadenceHeroSection
                 summaryStatsSectionGrid
                 chartSection
                 mapSection
@@ -144,6 +146,100 @@ struct WorkoutSummaryView: View {
     
     // MARK: - Extracted View Sections
     
+    // MARK: - Cadence Hero Section
+    
+    /// Duration of one bounce cycle based on average cadence
+    /// e.g. 80 RPM = 0.75s per beat
+    private var bounceDuration: Double {
+        guard data.averageCadence > 0 else { return 1.0 }
+        return 60.0 / data.averageCadence
+    }
+    
+    /// Cadence zone for this workout
+    private var cadenceZone: CadenceZone {
+        CadenceZone.zone(for: data.averageCadence, workoutType: data.workoutType)
+    }
+    
+    private var bouncingBackgroundIcon: some View {
+        Image(systemName: data.workoutType.sfSymbolName)
+            .font(.system(size: 140))
+            .foregroundStyle(cadenceZone.color.opacity(0.15))
+            .offset(y: isBouncing ? -6 : 0)
+            .animation(
+                .easeInOut(duration: bounceDuration / 2)
+                .repeatForever(autoreverses: true),
+                value: isBouncing
+            )
+            .onAppear {
+                guard data.averageCadence > 0 else { return }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    isBouncing = true
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.trailing, 0)
+    }
+    
+    private var cadenceHeroSection: some View {
+        VStack(spacing: 16) {
+            // Big cadence number
+            HStack(alignment: .lastTextBaseline, spacing: 4) {
+                Text("\(Int(data.averageCadence))")
+                    .font(.system(size: 56, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
+                
+                Text(data.workoutType.getInfo().unit)
+                    .font(.system(size: 24, weight: .semibold, design: .rounded))
+                    .foregroundStyle(cadenceZone.color)
+            }
+            
+            // Zone label
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(cadenceZone.color)
+                    .frame(width: 10, height: 10)
+                
+                Text(cadenceZoneLabel)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .offset(x: -80)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24)
+        .background(
+            ZStack {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(cadenceZone.color.opacity(0.08))
+                bouncingBackgroundIcon
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Average cadence: \(Int(data.averageCadence)) \(data.workoutType.getInfo().unit), \(cadenceZoneLabel)")
+    }
+    
+    /// Descriptive label for the cadence zone
+    private var cadenceZoneLabel: String {
+        let unit = data.workoutType.getInfo().unit
+        switch cadenceZone {
+        case .low:
+            if let cutoffs = data.workoutType.getInfo().cutoffs {
+                return "Low Cadence (<\(Int(cutoffs.low))\(unit))"
+            }
+            return "Low Cadence"
+        case .normal:
+            return "Sound Cadence"
+        case .high:
+            if let cutoffs = data.workoutType.getInfo().cutoffs {
+                return "High Cadence (>\(Int(cutoffs.high))\(unit))"
+            }
+            return "High Cadence"
+        case .zero:
+            return "No Cadence Detected"
+        }
+    }
+    
     private var summaryStatsSectionGrid: some View {
         VStack(alignment: .leading, spacing: 20) { // Overall container for title + grid
             Text("Workout Summary")
@@ -153,7 +249,7 @@ struct WorkoutSummaryView: View {
             Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 12) { // Spacing for grid cells
                 GridRow {
                     statsView(label: "Duration", stats: formatter.formatDuration(data.duration))
-                    statsView(label: "Avg. Cadence", stats: formatter.formatCadence(data.averageCadence, data.workoutType))
+                    statsView(label: "Active Kilocalories", stats: formatter.formatEnergyBurned(data.activeCalories))
                 }
                 Divider()
                 GridRow {
@@ -163,11 +259,6 @@ struct WorkoutSummaryView: View {
                 Divider()
                 GridRow {
                     statsView(label: "Avg. Speed", stats: formatter.formatSpeed(data.averageSpeed))
-                    statsView(label: "Max Speed", stats: formatter.formatSpeed(data.maxSpeed))
-                }
-                Divider()
-                GridRow {
-                    statsView(label: "Active Kilocalories", stats: formatter.formatEnergyBurned(data.activeCalories))
                     statsView(label: "Total Kilocalories", stats: formatter.formatEnergyBurned(data.totalCalories))
                 }
             }

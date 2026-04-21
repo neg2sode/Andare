@@ -9,11 +9,14 @@ import SwiftUI
 
 struct ArticlesView: View {
     let articles: [Article] = [
-        Article(title: "Understanding Cadence",
-                subtitle: "Why finding the right rhythm matters.",
+        Article(title: "Conquering Hills",
+                subtitle: "How to comfortably tackle uphills and downhills.",
+                thumbnailImageName: "intro_trail"), // Make sure this image exists in Assets
+        Article(title: "The Power of Consistency",
+                subtitle: "Why long-term rhythm habits matter.",
                 thumbnailImageName: "thumbnail_cadence"), // Make sure this image exists in Assets
-        Article(title: "Cadence and Joint Health",
-                subtitle: "How cadence impacts your knee health.",
+        Article(title: "Fatigue & Perceived Effort",
+                subtitle: "How tiredness changes how hard things feel.",
                 thumbnailImageName: "thumbnail_knee_pain"), // Make sure this image exists in Assets
         // Add more articles here later
     ]
