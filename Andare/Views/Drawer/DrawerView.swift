@@ -44,8 +44,8 @@ struct DrawerView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.bottom, 12)
-            .padding(.top, 20)
+            .padding(.bottom, 10)
+            .padding(.top, 36)
 
             // MARK: - Scrollable Content
             ScrollView {
