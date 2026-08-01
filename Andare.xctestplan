@@ -1,0 +1,37 @@
+{
+  "configurations" : [
+    {
+      "id" : "059A94C7-415E-4A50-AF3A-3A9A4A0581D0",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Andare.xcodeproj",
+      "identifier" : "468BE9D72D2961E100311D08",
+      "name" : "Andare"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:Andare.xcodeproj",
+        "identifier" : "468BE9E92D2961E200311D08",
+        "name" : "AndareTests"
+      }
+    },
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:Andare.xcodeproj",
+        "identifier" : "468BE9F32D2961E300311D08",
+        "name" : "AndareUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
