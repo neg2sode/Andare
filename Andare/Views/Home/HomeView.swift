@@ -205,13 +205,24 @@ struct HomeView: View {
                 .padding(.trailing, 20)
                 .offset(y: -160)
                 .transition(.opacity.animation(.easeIn(duration: 0.5)))
-            
+
             // The number is layered on top only for the final 3 seconds.
             if count <= 3 {
                 Text(String(count))
                     .font(.system(size: 150, weight: .bold, design: .rounded))
                     .foregroundStyle(.accent)
+                    .contentTransition(.numericText(countsDown: true))
+                    .animation(.spring(response: 0.3), value: count)
                     .transition(.opacity.combined(with: .scale))
+                    .accessibilityLabel("Starting in \(count)")
+            }
+
+            VStack {
+                Spacer()
+                Text("Tap anywhere to start immediately")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .padding(.bottom, 60)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
