@@ -30,4 +30,10 @@ struct WorkoutData: Identifiable, Equatable {
     var duration: TimeInterval {
         return endTime.timeIntervalSince(startTime)
     }
+
+    // Identity-based equality: `id` is unique per instance, and comparing the
+    // full segment/log payload field-by-field is never what callers need.
+    static func == (lhs: WorkoutData, rhs: WorkoutData) -> Bool {
+        lhs.id == rhs.id
+    }
 }

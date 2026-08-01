@@ -312,16 +312,16 @@ struct WorkoutSummaryView: View {
                 }
                 // Apply modifiers directly here:
                 .chartForegroundStyleScale([
-                    CadenceZone.low.rawValue: Color.lowCadenceColour,
-                    CadenceZone.normal.rawValue: Color.cadenceColour,
-                    CadenceZone.high.rawValue: Color.highCadenceColour
+                    CadenceZone.low.displayName: Color.lowCadenceColour,
+                    CadenceZone.normal.displayName: Color.cadenceColour,
+                    CadenceZone.high.displayName: Color.highCadenceColour
                 ])
                 .chartLegend(position: .bottom, alignment: .center) {
                     HStack {
-                        LegendItem(colour: Color.lowCadenceColour, text: CadenceZone.low.rawValue)
-                        LegendItem(colour: Color.cadenceColour, text: CadenceZone.normal.rawValue)
-                        LegendItem(colour: Color.highCadenceColour, text: CadenceZone.high.rawValue)
-                        LegendItem(colour: Color.gray, text: CadenceZone.zero.rawValue)
+                        LegendItem(colour: Color.lowCadenceColour, text: CadenceZone.low.displayName)
+                        LegendItem(colour: Color.cadenceColour, text: CadenceZone.normal.displayName)
+                        LegendItem(colour: Color.highCadenceColour, text: CadenceZone.high.displayName)
+                        LegendItem(colour: Color.gray, text: CadenceZone.zero.displayName)
                     }
                  }
                 .chartYScale(domain: 0...data.workoutType.cadenceInfo.range.max)
@@ -531,7 +531,7 @@ struct WorkoutSummaryView: View {
                 yEnd: .value("Cadence Max", segment.cadence),
                 width: .fixed(3)
             )
-            .foregroundStyle(by: .value("Zone", segment.zone.rawValue))
+            .foregroundStyle(by: .value("Zone", segment.zone.displayName))
             .cornerRadius(2)
         } else {
             PointMark(

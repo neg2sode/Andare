@@ -13,6 +13,15 @@ enum CadenceZone: String, Codable {
     case high = "High"
     case zero = "Zero"
 
+    /// User-facing name. The raw value is persisted (SwiftData) and must stay stable,
+    /// so display copy lives here instead.
+    var displayName: String {
+        switch self {
+        case .normal: return "Sound"
+        default: return rawValue
+        }
+    }
+
     var color: Color {
         switch self {
         case .low: return Color("lowCadenceColour")

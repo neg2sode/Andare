@@ -43,32 +43,6 @@ struct HomeView: View {
         }
     }
     
-    enum SessionState: Equatable {
-        case idle
-        case awaitingPermission
-        case showingGuide(workoutType: WorkoutType, requestAuth: Bool)
-        case countingDown(Int)
-        case starting
-        case active
-        case summary(data: WorkoutData)
-        case transitioning
-        
-        static func == (lhs: SessionState, rhs: SessionState) -> Bool {
-            switch (lhs, rhs) {
-            case (.idle, .idle), (.starting, .starting), (.active, .active), (.transitioning, .transitioning), (.awaitingPermission, .awaitingPermission):
-                return true
-            case (.showingGuide(let lType, let lAuth), .showingGuide(let rType, let rAuth)):
-                return lType == rType && lAuth == rAuth
-            case (.countingDown(let l), .countingDown(let r)):
-                return l == r
-            case (.summary(let l), .summary(let r)):
-                return l.id == r.id // Compare by ID
-            default:
-                return false
-            }
-        }
-    }
-    
     private var summaryBinding: Binding<WorkoutData?> {
         Binding<WorkoutData?>(
             get: {
