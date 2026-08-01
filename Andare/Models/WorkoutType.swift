@@ -41,14 +41,15 @@ enum WorkoutType: String, CaseIterable, Identifiable, Codable {
             )
         case .running:
             return WorkoutCadenceInfo(
-                range: (min: 100, max: 240),
+                // Range bounds both the FFT peak-search band and chart scales.
+                range: (min: 130, max: 210),
                 cutoffs: (low: 160, high: 200),
                 threshold: 1885.868061,
                 unit: "SPM"
             )
         case .walking:
             return WorkoutCadenceInfo(
-                range: (min: 60, max: 160),
+                range: (min: 60, max: 120),
                 cutoffs: nil,
                 threshold: 2842.008795,
                 unit: "SPM"
