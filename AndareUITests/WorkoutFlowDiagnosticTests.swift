@@ -21,6 +21,14 @@ final class WorkoutFlowDiagnosticTests: XCTestCase {
         sleep(2)
         attach(app, "1-after-start-tap")
 
+        // Guide screen 1: placement
+        let continueButton = app.buttons["Continue"]
+        if continueButton.waitForExistence(timeout: 3) {
+            attach(app, "1b-guide-placement")
+            continueButton.tap()
+            sleep(1)
+        }
+
         let letsGo = app.buttons["Let's Go"]
         if letsGo.waitForExistence(timeout: 3) {
             // Grant buttons in the guide (location may already be granted via simctl)

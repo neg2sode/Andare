@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreLocation
+import CoreMotion
 import HealthKit
 import UserNotifications
 
@@ -52,6 +53,19 @@ extension HKAuthorizationStatus {
             case .sharingDenied: .denied
             case .notDetermined: .notDetermined
             @unknown default: .denied
+        }
+    }
+}
+
+extension CMAuthorizationStatus {
+    var permissionStatus: PermissionStatus {
+        switch self {
+            // Denied is a warning, not an error: workouts still function,
+            // only barometer-based elevation degrades.
+            case .authorized: .granted
+            case .denied, .restricted: .warning
+            case .notDetermined: .notDetermined
+            @unknown default: .warning
         }
     }
 }

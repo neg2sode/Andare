@@ -11,7 +11,8 @@ import Foundation
 enum SessionState: Equatable {
     case idle
     case awaitingPermission
-    case showingGuide(workoutType: WorkoutType, requestAuth: Bool)
+    case guidePlacement(workoutType: WorkoutType, requestAuth: Bool)
+    case guidePermissions(workoutType: WorkoutType)
     case countingDown(Int)
     case starting
     case active

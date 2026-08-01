@@ -94,17 +94,36 @@ struct HomeView: View {
                     activeRideView
                         .transition(.opacity.animation(.easeInOut(duration: 0.5)))
                 
-                case .showingGuide(let workoutType, let requestAuth):
-                    GuideView(
+                case .guidePlacement(let workoutType, let requestAuth):
+                    GuidePlacementView(
                         workoutType: workoutType,
-                        requestAuth: requestAuth,
                         continueAction: {
-                            handleGuideCompletion(for: workoutType)
+                            if requestAuth {
+                                withAnimation {
+                                    sessionState = .guidePermissions(workoutType: workoutType)
+                                }
+                            } else {
+                                handleGuideCompletion()
+                            }
                         },
                         cancelAction: {
                             withAnimation {
                                 sessionState = .idle
                                 isDrawerPresented = true
+                            }
+                        }
+                    )
+                    .transition(.opacity.animation(.easeInOut))
+
+                case .guidePermissions(let workoutType):
+                    GuidePermissionsView(
+                        workoutType: workoutType,
+                        continueAction: {
+                            handleGuideCompletion()
+                        },
+                        backAction: {
+                            withAnimation {
+                                sessionState = .guidePlacement(workoutType: workoutType, requestAuth: true)
                             }
                         }
                     )
@@ -147,7 +166,7 @@ struct HomeView: View {
                         }
                     case .denied, .restricted:
                         switch sessionState {
-                        case .showingGuide(_, true):
+                        case .guidePermissions:
                             isShowingLocationWarning = true
                         default:
                             break
@@ -233,15 +252,20 @@ struct HomeView: View {
         }
     }
     
-    private func handleGuideCompletion(for workoutType: WorkoutType) {
+    private func handleGuideCompletion() {
+        rideSessionManager.startRidePreparations()
+        proceedToCountdown()
+    }
+
+    /// Guide flags are set when the workout actually starts, not when the
+    /// guide is dismissed — backing out of the countdown-adjacent states
+    /// shouldn't count as having seen the guide.
+    private func markGuideShown(for workoutType: WorkoutType) {
         switch workoutType {
             case .cycling: hasShownCyclingGuide = true
             case .running: hasShownRunningGuide = true
             case .walking: hasShownWalkingGuide = true
         }
-        
-        rideSessionManager.startRidePreparations()
-        proceedToCountdown()
     }
     
     private func handleCountdown() {
@@ -271,6 +295,7 @@ struct HomeView: View {
     }
 
     private func startWorkout() {
+        markGuideShown(for: pagingState.selectedWorkoutType)
         Task {
             await rideSessionManager.startRide()
             // After the async start completes, transition to the fully active state.
@@ -310,11 +335,8 @@ struct HomeView: View {
         let locationStatus = locationManager.authorisationStatus
         
         if !hasShownGuide(for: workoutType) {
-            if isFirstGuideEver || locationStatus == .notDetermined {
-                sessionState = .showingGuide(workoutType: workoutType, requestAuth: true)
-            } else {
-                sessionState = .showingGuide(workoutType: workoutType, requestAuth: false)
-            }
+            let requestAuth = isFirstGuideEver || locationStatus == .notDetermined
+            sessionState = .guidePlacement(workoutType: workoutType, requestAuth: requestAuth)
             isDrawerPresented = false
             return
         }
