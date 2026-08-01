@@ -88,7 +88,7 @@ struct StatsOverlayView: View {
     
     private var timerAndControlRow: some View {
         HStack(alignment: .center) {
-            Image(systemName: rideSessionManager.workoutType.sfSymbolName)
+            Image(systemName: rideSessionManager.workoutType.sfSymbol)
                 .font(.system(size: 54))
                 .symbolVariant(.circle.fill)
                 .foregroundStyle(.accent)
@@ -205,7 +205,7 @@ struct StatsOverlayView: View {
     }
     
     private var powerSpectrumChart: some View {
-        let cadenceRange = rideSessionManager.workoutType.getInfo().range
+        let cadenceRange = rideSessionManager.workoutType.cadenceInfo.range
         let peakFrequency = rideSessionManager.powerSpectrum.max(by: { $0.power < $1.power })?.frequency
         
         return Chart {
@@ -239,7 +239,7 @@ struct StatsOverlayView: View {
                         }
                 }
             } else {
-                let threshold = rideSessionManager.workoutType.getInfo().threshold
+                let threshold = rideSessionManager.workoutType.cadenceInfo.threshold
                 RuleMark(y: .value("Threshold", threshold))
                      .foregroundStyle(.gray)
                      .lineStyle(StrokeStyle(lineWidth: 1, dash: [5]))

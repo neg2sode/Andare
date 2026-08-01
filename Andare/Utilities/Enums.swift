@@ -29,7 +29,7 @@ enum CadenceZone: String, Codable {
         if cadence <= 0 {
             return .zero
         }
-        if let cutoffs = workoutType.getInfo().cutoffs {
+        if let cutoffs = workoutType.cadenceInfo.cutoffs {
             if cadence < cutoffs.low {
                 return .low
             } else if cadence > cutoffs.high {
@@ -116,7 +116,7 @@ enum WorkoutType: String, CaseIterable, Identifiable, Codable {
         }
     }
     
-    var sfSymbolName: String {
+    var sfSymbol: String {
         switch self {
             case .cycling: "figure.outdoor.cycle"
             case .running: "figure.run"
@@ -124,7 +124,7 @@ enum WorkoutType: String, CaseIterable, Identifiable, Codable {
         }
     }
     
-    func getInfo() -> WorkoutCadenceInfo {
+    var cadenceInfo: WorkoutCadenceInfo {
         switch(self) {
         case .cycling:
             return WorkoutCadenceInfo(

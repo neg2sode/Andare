@@ -118,7 +118,7 @@ struct GuideView: View {
             // 2. The new workout-specific guidance section
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
-                    Image(systemName: workoutType.sfSymbolName)
+                    Image(systemName: workoutType.sfSymbol)
                         .font(.headline)
                         .foregroundStyle(Color.accentColor)
                         .symbolEffect(.bounce.byLayer, options: .speed(1.28), value: animateSymbol)
@@ -162,7 +162,7 @@ struct GuideView: View {
     private var animationSection: some View {
         ZStack {
             // Bouncing workout icon
-            Image(systemName: workoutType.sfSymbolName)
+            Image(systemName: workoutType.sfSymbol)
                 .font(.system(size: 120))
                 .foregroundStyle(Color.accentColor.opacity(0.3))
                 .symbolEffect(.bounce, value: animateSymbol)

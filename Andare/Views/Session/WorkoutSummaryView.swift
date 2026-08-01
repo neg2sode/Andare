@@ -161,7 +161,7 @@ struct WorkoutSummaryView: View {
     }
     
     private var bouncingBackgroundIcon: some View {
-        Image(systemName: data.workoutType.sfSymbolName)
+        Image(systemName: data.workoutType.sfSymbol)
             .font(.system(size: 140))
             .foregroundStyle(cadenceZone.color.opacity(0.15))
             .offset(y: isBouncing ? -6 : 0)
@@ -188,7 +188,7 @@ struct WorkoutSummaryView: View {
                     .font(.system(size: 56, weight: .bold, design: .rounded))
                     .foregroundStyle(.primary)
                 
-                Text(data.workoutType.getInfo().unit)
+                Text(data.workoutType.cadenceInfo.unit)
                     .font(.system(size: 24, weight: .semibold, design: .rounded))
                     .foregroundStyle(cadenceZone.color)
             }
@@ -216,22 +216,22 @@ struct WorkoutSummaryView: View {
             .clipShape(RoundedRectangle(cornerRadius: 20))
         )
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Average cadence: \(Int(data.averageCadence)) \(data.workoutType.getInfo().unit), \(cadenceZoneLabel)")
+        .accessibilityLabel("Average cadence: \(Int(data.averageCadence)) \(data.workoutType.cadenceInfo.unit), \(cadenceZoneLabel)")
     }
     
     /// Descriptive label for the cadence zone
     private var cadenceZoneLabel: String {
-        let unit = data.workoutType.getInfo().unit
+        let unit = data.workoutType.cadenceInfo.unit
         switch cadenceZone {
         case .low:
-            if let cutoffs = data.workoutType.getInfo().cutoffs {
+            if let cutoffs = data.workoutType.cadenceInfo.cutoffs {
                 return "Low Cadence (<\(Int(cutoffs.low))\(unit))"
             }
             return "Low Cadence"
         case .normal:
             return "Sound Cadence"
         case .high:
-            if let cutoffs = data.workoutType.getInfo().cutoffs {
+            if let cutoffs = data.workoutType.cadenceInfo.cutoffs {
                 return "High Cadence (>\(Int(cutoffs.high))\(unit))"
             }
             return "High Cadence"
@@ -324,7 +324,7 @@ struct WorkoutSummaryView: View {
                         LegendItem(colour: Color.gray, text: CadenceZone.zero.rawValue)
                     }
                  }
-                .chartYScale(domain: 0...data.workoutType.getInfo().range.max)
+                .chartYScale(domain: 0...data.workoutType.cadenceInfo.range.max)
                 .chartXAxis {
                     AxisMarks(preset: .automatic, values: .automatic(desiredCount: 5)) { value in
                         AxisGridLine()

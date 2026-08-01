@@ -78,19 +78,19 @@ final class MotionManager {
     }
 
     init(workoutType: WorkoutType) {
-        let cadenceRange = workoutType.getInfo().range
+        let cadenceRange = workoutType.cadenceInfo.range
         self.minCadenceFreq = cadenceRange.min / 60.0 // converting to frequency (Hz) from RPM
         self.maxCadenceFreq = cadenceRange.max / 60.0
-        self.magnitudeThreshold = workoutType.getInfo().threshold
+        self.magnitudeThreshold = workoutType.cadenceInfo.threshold
         operationQueue.maxConcurrentOperationCount = 1
         motionManager.gyroUpdateInterval = MotionManager.UPDATE_INTERVAL
     }
     
     func configure(for newType: WorkoutType) {
-        let cadenceRange = newType.getInfo().range
+        let cadenceRange = newType.cadenceInfo.range
         self.minCadenceFreq = cadenceRange.min / 60.0
         self.maxCadenceFreq = cadenceRange.max / 60.0
-        self.magnitudeThreshold = newType.getInfo().threshold
+        self.magnitudeThreshold = newType.cadenceInfo.threshold
     }
 
     func startUpdates() {

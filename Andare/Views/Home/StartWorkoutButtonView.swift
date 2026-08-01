@@ -74,7 +74,7 @@ struct StartWorkoutButtonView: View {
                         .fill(Color.accentColor)
                         .shadow(radius: 10)
 
-                    Image(systemName: workoutType.sfSymbolName)
+                    Image(systemName: workoutType.sfSymbol)
                         .font(.system(size: 70, weight: .light))
                         .foregroundStyle(.white)
                 }

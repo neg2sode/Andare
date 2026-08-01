@@ -12,7 +12,7 @@ import ActivityKit
 struct RideActivityWidget: Widget {
     @ViewBuilder
     private func workoutIcon(for workoutType: WorkoutType) -> some View {
-        Image(systemName: workoutType.sfSymbolName)
+        Image(systemName: workoutType.sfSymbol)
             .symbolVariant(.circle.fill)
             .foregroundStyle(.accent)
             .symbolRenderingMode(.hierarchical)
