@@ -49,9 +49,14 @@ final class RideSessionManager: ObservableObject {
     @Published var totalCalories: Double = 0.0
     @Published var logEntries: [LogEntry] = []
     @Published var locationAuthStatus: CLAuthorizationStatus = .notDetermined
-    @Published var dominantAxis: DominantAxis = .none
-    @Published var powerSpectrum: [FFTPoint] = []
-    @Published var sensorData: [SensorAxisData] = []
+
+    // --- Live Gyro Stream (drives the expandable panel; only populated
+    // while a consumer has called startGyroStreaming) ---
+    @Published var gyroXHistory: [GyroHistoryPoint] = []
+    @Published var gyroYHistory: [GyroHistoryPoint] = []
+    @Published var gyroZHistory: [GyroHistoryPoint] = []
+    private var gyroStreamTask: Task<Void, Never>?
+    private let gyroHistorySize = 512
     
     // --- Constants ---
     private let halfMaxLogEntries = 500
@@ -151,6 +156,7 @@ final class RideSessionManager: ObservableObject {
         altitudeUpdateTask = nil
         locationUpdateTask?.cancel()
         locationUpdateTask = nil
+        stopGyroStreaming()
         motionManager.stopUpdates()
         locationManager.stopUpdates()
         
@@ -238,11 +244,7 @@ final class RideSessionManager: ObservableObject {
                 
                 let timestamp = rawCadenceData.timestamp
                 let rawCadence = rawCadenceData.cadence
-                
-                self.dominantAxis = rawCadenceData.dominantAxis
-                self.powerSpectrum = rawCadenceData.powerSpectrum
-                self.sensorData = rawCadenceData.sensorData
-                
+
                 let result = await self.computeCadenceSegment(timestamp: timestamp, rawCadence: rawCadence)
                 self.cadenceSegments.append(result.segment)
                 
@@ -332,6 +334,41 @@ final class RideSessionManager: ObservableObject {
                     self.altitudeBuffer.removeFirst(halfMaxBufferSize)
                 }
             }
+        }
+    }
+
+    // MARK: - Live Gyro Streaming
+
+    /// Starts mirroring raw gyro batches into the published history windows.
+    /// Call only while the gyro panel is actually visible — this is the only
+    /// per-sample work that ever reaches the main thread.
+    func startGyroStreaming() {
+        guard gyroStreamTask == nil else { return }
+        gyroStreamTask = Task {
+            for await batch in motionManager.gyroStreamPublisher.values {
+                guard !Task.isCancelled else { break }
+                self.appendGyroBatch(batch)
+            }
+        }
+    }
+
+    func stopGyroStreaming() {
+        gyroStreamTask?.cancel()
+        gyroStreamTask = nil
+        gyroXHistory.removeAll()
+        gyroYHistory.removeAll()
+        gyroZHistory.removeAll()
+    }
+
+    private func appendGyroBatch(_ batch: [SensorBufferData]) {
+        gyroXHistory.append(contentsOf: batch.map { GyroHistoryPoint(value: $0.x) })
+        gyroYHistory.append(contentsOf: batch.map { GyroHistoryPoint(value: $0.y) })
+        gyroZHistory.append(contentsOf: batch.map { GyroHistoryPoint(value: $0.z) })
+
+        if gyroXHistory.count > gyroHistorySize {
+            gyroXHistory.removeFirst(gyroXHistory.count - gyroHistorySize)
+            gyroYHistory.removeFirst(gyroYHistory.count - gyroHistorySize)
+            gyroZHistory.removeFirst(gyroZHistory.count - gyroHistorySize)
         }
     }
     
@@ -625,16 +662,17 @@ final class RideSessionManager: ObservableObject {
         self.activeCalories = 0.0
         self.averageCadence = nil
         self.averageSpeed = nil
-        self.dominantAxis = .none
-        self.powerSpectrum.removeAll()
-        self.sensorData.removeAll()
+        self.gyroXHistory.removeAll()
+        self.gyroYHistory.removeAll()
+        self.gyroZHistory.removeAll()
     }
-    
+
     deinit {
         self.cadenceUpdateTask?.cancel()
         self.altitudeUpdateTask?.cancel()
         self.locationUpdateTask?.cancel()
         self.locationErrorTask?.cancel()
+        self.gyroStreamTask?.cancel()
         self.workoutBuilder?.discardWorkout()
     }
 }
