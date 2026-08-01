@@ -15,9 +15,9 @@ struct HomeView: View {
     @StateObject private var drawerState = DrawerState()
     @StateObject private var pagingState: WorkoutPagingState
     
-    @StateObject var alertManager = AlertManager.shared
-    @StateObject var locationManager = LocationManager.shared
-    @StateObject var healthKitManager = HealthKitManager.shared
+    @ObservedObject var alertManager = AlertManager.shared
+    @ObservedObject var locationManager = LocationManager.shared
+    @ObservedObject var healthKitManager = HealthKitManager.shared
     
     @State private var isDrawerPresented = false
     @State private var isShowingLocationWarning = false

@@ -59,9 +59,8 @@ struct GuideView: View {
     @State private var animateSymbol = false
     @State private var rotatePhone = false
     
-    @StateObject private var alertManager = AlertManager()
-    @StateObject private var locationManager = LocationManager.shared
-    @StateObject private var healthKitManager = HealthKitManager.shared
+    @ObservedObject private var locationManager = LocationManager.shared
+    @ObservedObject private var healthKitManager = HealthKitManager.shared
     
     @Environment(\.scenePhase) private var scenePhase
 

@@ -26,9 +26,9 @@ struct PreferencesView: View {
     @State private var healthKitProfileLinked = false
     
     @StateObject private var alertManager = AlertManager()
-    @StateObject private var locationManager = LocationManager.shared
-    @StateObject private var healthKitManager = HealthKitManager.shared
-    @StateObject private var notificationManager = NotificationManager.shared
+    @ObservedObject private var locationManager = LocationManager.shared
+    @ObservedObject private var healthKitManager = HealthKitManager.shared
+    @ObservedObject private var notificationManager = NotificationManager.shared
     
     private let frequencyTip = NotificationFrequencyTip()
     

@@ -11,7 +11,7 @@ import Combine
 
 struct StatsOverlayView: View {
     @ObservedObject var rideSessionManager: RideSessionManager
-    @StateObject private var formatter = StatsFormatter.shared
+    @ObservedObject private var formatter = StatsFormatter.shared
     
     @State private var isExpanded: Bool = false
     private let slideOffset: CGFloat = 420

@@ -11,7 +11,7 @@ import SwiftData
 struct WorkoutThumbnailCardView: View {
     let workout: WorkoutDataModel
     
-    @StateObject private var formatter = StatsFormatter.shared
+    @ObservedObject private var formatter = StatsFormatter.shared
 
     var body: some View {
         HStack(alignment: .top) {

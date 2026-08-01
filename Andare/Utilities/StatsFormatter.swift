@@ -8,15 +8,10 @@
 import Foundation
 import SwiftUI
 
-struct FormattedStats: Identifiable {
-    let id = UUID()
+struct FormattedStats {
     let value: String
     let unit: String
     let colour: Color
-    
-    var plain: String {
-        return value + unit
-    }
 }
 
 enum ResolvedUnitSystem {
@@ -91,6 +86,34 @@ class StatsFormatter: ObservableObject {
             let speedInMph = speed * 2.23694
             let value = NumberFormatter.decimalFormatter.string(from: NSNumber(value: speedInMph)) ?? "0.0"
             return FormattedStats(value: value, unit: "MPH", colour: .speedColour)
+        }
+    }
+
+    /// Pace (time per distance) for running/walking, e.g. 5'30" /KM.
+    func formatPace(_ speedInMps: Double?) -> FormattedStats {
+        let system = resolveUnitSystem()
+        let unit = system == .metric ? "/KM" : "/MI"
+
+        // Below ~0.1 m/s pace explodes toward infinity; show a placeholder.
+        guard let speed = speedInMps, speed > 0.1 else {
+            return FormattedStats(value: "--'--\"", unit: unit, colour: .speedColour)
+        }
+
+        let metersPerUnit = system == .metric ? 1000.0 : 1609.344
+        let paceSeconds = metersPerUnit / speed
+        let minutes = Int(paceSeconds) / 60
+        let seconds = Int(paceSeconds) % 60
+        let value = String(format: "%d'%02d\"", minutes, seconds)
+        return FormattedStats(value: value, unit: unit, colour: .speedColour)
+    }
+
+    /// Pace for running/walking, speed for cycling.
+    func formatSpeedOrPace(_ speedInMps: Double?, workoutType: WorkoutType) -> FormattedStats {
+        switch workoutType {
+        case .running, .walking:
+            return formatPace(speedInMps)
+        case .cycling:
+            return formatSpeed(speedInMps)
         }
     }
 

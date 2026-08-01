@@ -40,7 +40,7 @@ struct WorkoutSummaryView: View {
     @State private var isBouncing = false
     @State private var mapCameraPosition: MapCameraPosition
     
-    @StateObject private var formatter = StatsFormatter.shared
+    @ObservedObject private var formatter = StatsFormatter.shared
     
     @Environment(\.dismiss) var dismiss
     
