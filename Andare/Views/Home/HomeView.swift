@@ -182,18 +182,9 @@ struct HomeView: View {
                 
             VStack {
                 Spacer()
-                Button(action: stopWorkout) {
-                    Text("Stop Workout")
-                        .font(.title2.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                }
-                .background(Color.red)
-                .cornerRadius(24)
-                .shadow(radius: 5)
-                .padding(.horizontal)
-                .padding(.bottom, 12)
+                LongPressStopButton(onStop: stopWorkout)
+                    .padding(.horizontal, 30)
+                    .padding(.bottom, 12)
             }
         }
     }
