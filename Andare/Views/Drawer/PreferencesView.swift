@@ -89,31 +89,36 @@ struct PreferencesView: View {
     
     private var permissionsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader(title: "Permissions")
+            SectionHeader(title: "Permissions")
             
             VStack(spacing: 0) {
                 // location row
                 Button(action: handleLocationRowTap) {
                     PermissionRow(title: "Location", status: locationManager.authorisationStatus.permissionStatus)
+                        .padding(.horizontal)
+                        .padding(.vertical, 13)
                 }
-                
+
                 Divider().padding(.leading)
-                
+
                 // Workouts Row
                 Button(action: handleWorkoutsRowTap) {
                     PermissionRow(title: "Workouts", status: healthKitManager.authorisationStatus(for: HKObjectType.workoutType()).permissionStatus)
+                        .padding(.horizontal)
+                        .padding(.vertical, 13)
                 }
-                
+
                 Divider().padding(.leading)
-                
+
                 // notification row
                 Button(action: handleNotificationsRowTap) {
                     PermissionRow(title: "Notifications", status: notificationManager.authorizationStatus.permissionStatus)
+                        .padding(.horizontal)
+                        .padding(.vertical, 13)
                 }
             }
             .buttonStyle(.plain) // Apply to all buttons within
-            .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cardStyle(radius: 12)
             .padding(.horizontal)
         }
     }
@@ -121,7 +126,7 @@ struct PreferencesView: View {
     private var profileSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                sectionHeader(title: "Profile")
+                SectionHeader(title: "Profile")
                 
                 Spacer()
                 
@@ -146,15 +151,14 @@ struct PreferencesView: View {
                 Divider().padding(.leading)
                 ProfileRow(title: "Height (cm)", value: $userHeightCm, formatter: .decimalFormatter)
             }
-            .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cardStyle(radius: 12)
             .padding(.horizontal)
         }
     }
     
     private var unitsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader(title: "Units")
+            SectionHeader(title: "Units")
             
             // The rounded group container
             VStack(spacing: 0) {
@@ -195,15 +199,14 @@ struct PreferencesView: View {
                 }
                 .tint(.primary)
             }
-            .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(12)
+            .cardStyle(radius: 12)
             .padding(.horizontal)
         }
     }
     
     private var notificationSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionHeader(title: "Notifications")
+            SectionHeader(title: "Notifications")
             
             VStack(spacing: 0) {
                 Toggle("Finish Workout Alert", isOn: $finishWorkoutAlertEnabled)
@@ -235,21 +238,12 @@ struct PreferencesView: View {
                     .padding(.vertical, 13)
                 }
             }
-            .background(Color(.secondarySystemGroupedBackground)).cornerRadius(12).padding(.horizontal)
+            .cardStyle(radius: 12).padding(.horizontal)
             .animation(.easeInOut(duration: 0.2), value: realTimeAlertsEnabled)
         }
     }
 
     // MARK: - Helper Methods
-    
-    private func sectionHeader(title: String) -> some View {
-        Text(title)
-            .font(.subheadline)
-            .fontWeight(.medium)
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 22)
-            .textCase(nil)
-    }
 
     private func handleLocationRowTap() {
         let status = locationManager.authorisationStatus
@@ -292,24 +286,6 @@ struct PreferencesView: View {
     }
 }
 
-// A helper for the simple "Title" + "Status Icon" rows
-struct PermissionRow: View {
-    let title: String
-    let status: PermissionStatus
-    
-    var body: some View {
-        HStack {
-            Text(title)
-            Spacer()
-            Image(systemName: status.iconName)
-                .foregroundStyle(status.iconColour)
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 13)
-        .contentShape(Rectangle())
-    }
-}
-
 // A helper for the "Title" + "TextField" rows
 struct ProfileRow: View {
     let title: String
@@ -327,69 +303,6 @@ struct ProfileRow: View {
         .padding(.horizontal)
         .padding(.vertical, 13)
         .contentShape(Rectangle())
-    }
-}
-
-// MARK: - Helper Enums and Extensions
-
-// An enum to decouple the view from CoreLocation/HealthKit types
-enum PermissionStatus {
-    case granted, denied, warning, notDetermined
-    
-    var iconName: String {
-        switch self {
-            case .granted: "checkmark.circle.fill"
-            case .denied: "xmark.octagon.fill"
-            case .warning: "exclamationmark.triangle.fill"
-            case .notDetermined: "info.circle.fill"
-        }
-    }
-    
-    var iconColour: Color {
-        switch self {
-            case .granted: .green
-            case .denied: .red
-            case .warning: .orange
-            case .notDetermined: .gray
-        }
-    }
-}
-
-// Extend the system types to map to our view-specific enum
-extension CLAuthorizationStatus {
-    var permissionStatus: PermissionStatus {
-        switch self {
-            case .authorizedAlways, .authorizedWhenInUse: .granted
-            case .denied, .restricted: .warning
-            case .notDetermined: .notDetermined
-            @unknown default: .warning
-        }
-    }
-}
-
-extension HKAuthorizationStatus {
-    var permissionStatus: PermissionStatus {
-        switch self {
-            case .sharingAuthorized: .granted
-            case .sharingDenied: .denied
-            case .notDetermined: .notDetermined
-            @unknown default: .denied
-        }
-    }
-}
-
-extension UNAuthorizationStatus {
-    var permissionStatus: PermissionStatus {
-        switch self {
-        case .authorized, .provisional, .ephemeral:
-            return .granted
-        case .denied:
-            return .denied
-        case .notDetermined:
-            return .notDetermined
-        @unknown default:
-            return .denied
-        }
     }
 }
 

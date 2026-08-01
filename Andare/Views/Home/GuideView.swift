@@ -195,36 +195,29 @@ struct GuideView: View {
             Text("Required Permissions")
                 .font(.headline)
             
-            PermissionGuideRow(
+            PermissionRow(
                 title: "Location",
                 subtitle: "To track your route and distance.",
-                iconName: "location.fill",
+                icon: "location.fill",
                 status: locationManager.authorisationStatus.permissionStatus,
-                action: { locationManager.requestAuthorisation() }
+                grantAction: { locationManager.requestAuthorisation() }
             )
-            
-            PermissionGuideRow(
+
+            PermissionRow(
                 title: "Workouts",
                 subtitle: "To save your session to Apple Health.",
-                iconName: "heart.fill",
+                icon: "heart.fill",
                 status: healthKitManager.authorisationStatus.permissionStatus,
-                action: { Task { try? await healthKitManager.requestAuthorisation() } }
+                grantAction: { Task { try? await healthKitManager.requestAuthorisation() } }
             )
         }
     }
     
     private var footerButtons: some View {
         VStack(spacing: 24) {
-            Button(action: continueAction) {
-                Text("Let's Go")
-                    .font(.headline).fontWeight(.semibold)
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .cornerRadius(16)
-            }
-            .disabled(requestAuth && !arePermissionsGranted)
+            Button("Let's Go", action: continueAction)
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(requestAuth && !arePermissionsGranted)
             .opacity(requestAuth && !arePermissionsGranted ? 0.5 : 1.0)
             .animation(.easeInOut, value: arePermissionsGranted)
             
@@ -290,39 +283,6 @@ struct FeatureHighlight: View {
         }
     }
 }
-
-struct PermissionGuideRow: View {
-    let title: String, subtitle: String, iconName: String
-    let status: PermissionStatus
-    let action: () -> Void
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: iconName)
-                .font(.title2).foregroundStyle(.white)
-                .frame(width: 44, height: 44)
-                .background(.green.gradient)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            
-            VStack(alignment: .leading) {
-                Text(title).font(.headline)
-                Text(subtitle).font(.caption).foregroundStyle(.secondary)
-            }
-            
-            Spacer()
-            
-            if status == .notDetermined {
-                Button("Grant", action: action)
-                    .buttonStyle(.bordered)
-                    .tint(.accentColor)
-            } else {
-                Image(systemName: status.iconName)
-                    .font(.title2).foregroundStyle(status.iconColour)
-            }
-        }
-    }
-}
-
 
 // MARK: - Previews
 

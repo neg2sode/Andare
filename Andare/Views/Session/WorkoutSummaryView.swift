@@ -127,15 +127,8 @@ struct WorkoutSummaryView: View {
         VStack {
             Spacer()
             if isDoneButtonVisible {
-                Button(action: { dismiss() }) {
-                    Text("Done")
-                        .font(.headline).fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.accentColor)
-                        .cornerRadius(16)
-                }
+                Button("Done") { dismiss() }
+                .buttonStyle(PrimaryButtonStyle())
                 .padding(.horizontal, 30)
                 .padding(.bottom)
                 .shadow(radius: 5)
@@ -264,10 +257,7 @@ struct WorkoutSummaryView: View {
             }
         }
         .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(UIColor.secondarySystemGroupedBackground))
-        )
+        .cardStyle()
     }
     
     // Helper for individual stat display
@@ -350,10 +340,7 @@ struct WorkoutSummaryView: View {
             }
         }
         .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(UIColor.secondarySystemGroupedBackground))
-        )
+        .cardStyle()
     }
     
     private var mapSection: some View {
@@ -385,11 +372,8 @@ struct WorkoutSummaryView: View {
                     }
                 }
                 .padding(20)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color(UIColor.secondarySystemGroupedBackground))
-                )
-            
+                .cardStyle()
+
             case .prompt:
                 // Message for reduced accuracy (existing code)
                 Text("Route map is not available because Precise Location is turned off for Andare. You can enable it in Settings > Privacy & Security > Location Services > Andare.")
