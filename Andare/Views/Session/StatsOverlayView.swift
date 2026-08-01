@@ -163,22 +163,24 @@ struct StatsOverlayView: View {
             Spacer()
 
             // Expand/collapse chevron with one-time discovery hint
-            VStack(spacing: 4) {
-                Button {
-                    isExpanded.toggle()
-                    markPanelDiscovered()
-                } label: {
-                    Image(systemName: "chevron.down.circle.fill")
-                        .font(.system(size: 54))
-                        .foregroundStyle(.accent)
-                        .symbolRenderingMode(.hierarchical)
-                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
-                }
-
+            Button {
+                isExpanded.toggle()
+                markPanelDiscovered()
+            } label: {
+                Image(systemName: "chevron.down.circle.fill")
+                    .font(.system(size: 54))
+                    .foregroundStyle(.accent)
+                    .symbolRenderingMode(.hierarchical)
+                    .rotationEffect(.degrees(isExpanded ? 180 : 0))
+            }
+            // Overlaid so the hint never widens the row (the timer would wrap)
+            .overlay(alignment: .bottom) {
                 if !hasDiscoveredStats {
                     Text("Swipe down for more")
                         .font(.system(size: 9, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
+                        .fixedSize()
+                        .offset(y: 16)
                         .transition(.opacity)
                 }
             }
