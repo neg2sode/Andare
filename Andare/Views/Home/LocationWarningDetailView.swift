@@ -12,7 +12,7 @@ struct LocationWarningDetailView: View {
     @AppStorage("showLocationWarningPreference") private var showLocationWarningPreference = true
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // Scrollable content
                 ScrollView {

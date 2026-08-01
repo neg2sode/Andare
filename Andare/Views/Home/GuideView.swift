@@ -271,19 +271,6 @@ struct RiskWarningView: View {
     }
 }
 
-struct FeatureHighlight: View {
-    let iconName: String, iconColor: Color, title: String, subtitle: String
-    var body: some View {
-        HStack(alignment: .top, spacing: 16) {
-            Image(systemName: iconName).font(.title).foregroundStyle(iconColor).frame(width: 40)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.headline)
-                Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
-            }
-        }
-    }
-}
-
 // MARK: - Previews
 
 struct GuideView_Previews: PreviewProvider {

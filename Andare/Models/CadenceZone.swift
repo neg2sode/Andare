@@ -24,9 +24,9 @@ enum CadenceZone: String, Codable {
 
     var color: Color {
         switch self {
-        case .low: return Color("lowCadenceColour")
-        case .normal: return Color("cadenceColour")
-        case .high: return Color("highCadenceColour")
+        case .low: return .lowCadenceColour
+        case .normal: return .cadenceColour
+        case .high: return .highCadenceColour
         case .zero: return .gray
         }
     }

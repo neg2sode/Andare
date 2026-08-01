@@ -73,7 +73,7 @@ struct WorkoutSummaryView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 scrollableContent
                 floatingDoneButton

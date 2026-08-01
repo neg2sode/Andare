@@ -28,7 +28,7 @@ struct FullMapView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Map(position: $localMapCameraPosition, interactionModes: .all) {
                 WorkoutSummaryView.routeMapContent(polyline: routePolyline, start: start, end: end)
             }

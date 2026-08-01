@@ -42,8 +42,8 @@ struct ArticlesView: View {
             .padding(.horizontal)
             .sheet(item: $selectedArticle) { article in
                 // The content of the sheet
-                // Wrap ArticleDetailView in NavigationView to get the title bar and Done button
-                NavigationView {
+                // Wrap ArticleDetailView in NavigationStack to get the title bar and Done button
+                NavigationStack {
                     ArticleDetailView(article: article)
                 }
             }
