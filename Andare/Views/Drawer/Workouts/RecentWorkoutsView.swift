@@ -121,10 +121,9 @@ struct RecentWorkoutsView: View {
         VStack(spacing: 8) {
             List {
                 ForEach(workoutsToShow) { workout in
-                    WorkoutThumbnailCardView(workout: workout)
-                        .onTapGesture {
-                            self.selectedWorkoutData = WorkoutData(from: workout)
-                        }
+                    WorkoutThumbnailCardView(workout: workout) {
+                        self.selectedWorkoutData = WorkoutData(from: workout)
+                    }
                         .contextMenu {
                             contextMenuButtons(for: workout)
                         }
