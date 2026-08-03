@@ -51,6 +51,7 @@ struct DrawerView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     TodaySection()
+                    CadenceSummarySection()
                     RecentWorkoutsView(isExpanded: $workoutsExpanded)
                     ArticlesView()
                     ContactMeView()

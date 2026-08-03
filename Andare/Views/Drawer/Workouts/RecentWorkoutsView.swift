@@ -82,7 +82,7 @@ struct RecentWorkoutsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(workoutsHeaderTitle)
-                .font(.title)
+                .font(.title2)
                 .fontWeight(.bold)
             
             if workoutsInLastWeek.isEmpty {
