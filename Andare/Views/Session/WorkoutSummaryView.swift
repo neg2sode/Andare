@@ -234,52 +234,26 @@ struct WorkoutSummaryView: View {
     }
     
     private var summaryStatsSectionGrid: some View {
-        VStack(alignment: .leading, spacing: 20) { // Overall container for title + grid
+        let speedLabel = data.workoutType == .cycling ? "Avg. Speed" : "Avg. Pace"
+        let columns = [
+            GridItem(.flexible(), spacing: 12),
+            GridItem(.flexible(), spacing: 12)
+        ]
+
+        return VStack(alignment: .leading, spacing: 12) {
             Text("Workout Summary")
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 12) { // Spacing for grid cells
-                GridRow {
-                    statsView(label: "Duration", stats: formatter.formatDuration(data.duration))
-                    statsView(label: "Active Kilocalories", stats: formatter.formatEnergyBurned(data.activeCalories))
-                }
-                Divider()
-                GridRow {
-                    statsView(label: "Distance", stats: formatter.formatDistance(data.totalDistance))
-                    statsView(label: "Elevation Gain", stats: formatter.formatElevation(data.elevationGain))
-                }
-                Divider()
-                GridRow {
-                    statsView(label: "Avg. Speed", stats: formatter.formatSpeed(data.averageSpeed))
-                    statsView(label: "Total Kilocalories", stats: formatter.formatEnergyBurned(data.totalCalories))
-                }
+            LazyVGrid(columns: columns, spacing: 12) {
+                SummaryStatCard(label: "Duration", stats: formatter.formatDuration(data.duration))
+                SummaryStatCard(label: "Distance", stats: formatter.formatDistance(data.totalDistance))
+                SummaryStatCard(label: speedLabel, stats: formatter.formatSpeedOrPace(data.averageSpeed, workoutType: data.workoutType))
+                SummaryStatCard(label: "Elevation Gain", stats: formatter.formatElevation(data.elevationGain))
+                SummaryStatCard(label: "Active Calories", stats: formatter.formatEnergyBurned(data.activeCalories))
+                SummaryStatCard(label: "Total Calories", stats: formatter.formatEnergyBurned(data.totalCalories))
             }
         }
-        .padding(20)
-        .cardStyle()
-    }
-    
-    // Helper for individual stat display
-    private func statsView(label: String, stats: FormattedStats) -> some View {
-        VStack(alignment: .leading) {
-            Text(label)
-                .font(.system(size: 18, weight: .regular))
-                .foregroundStyle(.primary)
-            HStack(alignment: .lastTextBaseline, spacing: 0) {
-                Text(stats.value)
-                    .font(.system(size: 28, weight: .medium, design: .rounded))
-                    .foregroundStyle(stats.colour) // Apply specific color to the value
-                    .lineLimit(1) // Ensure the value stays on one line
-                    .minimumScaleFactor(0.7) // Allow text to shrink if it's too long to fit
-                Text(stats.unit)
-                    .font(.system(size: 22, weight: .medium, design: .rounded))
-                    .foregroundStyle(stats.colour)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading) // Ensure each statView takes up available column width
     }
     
     // 2. Chart Section
@@ -337,10 +311,12 @@ struct WorkoutSummaryView: View {
                     }
                 }
                 .frame(height: 250)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Cadence over time chart showing \(data.cadenceSegments.count) data points, average \(Int(data.averageCadence)) \(data.workoutType.cadenceInfo.unit)")
             }
         }
         .padding(20)
-        .cardStyle()
+        .cardStyle(radius: 20)
     }
     
     private var mapSection: some View {
@@ -372,7 +348,7 @@ struct WorkoutSummaryView: View {
                     }
                 }
                 .padding(20)
-                .cardStyle()
+                .cardStyle(radius: 20)
 
             case .prompt:
                 // Message for reduced accuracy (existing code)
