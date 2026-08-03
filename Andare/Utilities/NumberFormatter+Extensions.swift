@@ -24,6 +24,14 @@ extension NumberFormatter {
         return formatter
     }()
     
+    static let groupedIntegerFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.usesGroupingSeparator = true
+        formatter.maximumFractionDigits = 0
+        return formatter
+    }()
+
     static let twoDecimalFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal

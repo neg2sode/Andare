@@ -33,7 +33,15 @@ final class HealthKitManager: ObservableObject {
         HKObjectType.workoutType(),
         HKQuantityType(.cyclingCadence),
         HKQuantityType(.bodyMass),
-        HKQuantityType(.height)
+        HKQuantityType(.height),
+        HKQuantityType(.timeInDaylight),
+        HKQuantityType(.stepCount)
+    ]
+
+    // Read-only types backing the drawer's Today cards.
+    private let todayReadTypes: Set<HKObjectType> = [
+        HKQuantityType(.timeInDaylight),
+        HKQuantityType(.stepCount)
     ]
     
     init() {
@@ -65,6 +73,40 @@ final class HealthKitManager: ObservableObject {
         return healthStore.authorizationStatus(for: type)
     }
     
+    /// Whether requesting authorization would show the HealthKit sheet for
+    /// the Today card read types (i.e. the user hasn't been asked yet).
+    func shouldRequestTodayAuthorisation() async -> Bool {
+        guard HKHealthStore.isHealthDataAvailable() else { return false }
+        let status = try? await healthStore.statusForAuthorizationRequest(toShare: [], read: todayReadTypes)
+        return status == .shouldRequest
+    }
+
+    func requestTodayAuthorisation() async {
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+        try? await healthStore.requestAuthorization(toShare: [], read: todayReadTypes)
+    }
+
+    /// Today's cumulative sum for a quantity type, in the given unit.
+    /// Returns nil when there is no readable data — HealthKit does not
+    /// distinguish "read denied" from "no data", so nil covers both.
+    func fetchTodaysSum(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit) async -> Double? {
+        guard HKHealthStore.isHealthDataAvailable() else { return nil }
+        let quantityType = HKQuantityType(identifier)
+        let startOfDay = Calendar.current.startOfDay(for: Date())
+        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: Date(), options: .strictStartDate)
+
+        return await withCheckedContinuation { continuation in
+            let query = HKStatisticsQuery(quantityType: quantityType, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, statistics, _ in
+                guard let sum = statistics?.sumQuantity() else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                continuation.resume(returning: sum.doubleValue(for: unit))
+            }
+            healthStore.execute(query)
+        }
+    }
+
     func fetchBodyMass() async -> Double? {
         let bodyMassType = HKQuantityType(.bodyMass)
         let authStatus = healthStore.authorizationStatus(for: bodyMassType)

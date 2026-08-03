@@ -14,24 +14,36 @@ struct SummaryStatCard: View {
     let value: String
     let unit: String
     let unitColour: Color
+    let icon: String?
+    let iconTint: Color
 
-    init(label: String, value: String, unit: String, unitColour: Color) {
+    init(label: String, value: String, unit: String, unitColour: Color, icon: String? = nil, iconTint: Color = .secondary) {
         self.label = label
         self.value = value
         self.unit = unit
         self.unitColour = unitColour
+        self.icon = icon
+        self.iconTint = iconTint
     }
 
-    init(label: String, stats: FormattedStats) {
-        self.init(label: label, value: stats.value, unit: stats.unit, unitColour: stats.colour)
+    init(label: String, stats: FormattedStats, icon: String? = nil, iconTint: Color = .secondary) {
+        self.init(label: label, value: stats.value, unit: stats.unit, unitColour: stats.colour, icon: icon, iconTint: iconTint)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+            HStack(spacing: 6) {
+                if let icon {
+                    Image(systemName: icon)
+                        .font(.body)
+                        .foregroundStyle(iconTint)
+                }
+
+                Text(label)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
 
             HStack(alignment: .lastTextBaseline, spacing: 2) {
                 Text(value)

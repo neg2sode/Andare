@@ -50,6 +50,7 @@ struct DrawerView: View {
             // MARK: - Scrollable Content
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    TodaySection()
                     RecentWorkoutsView(isExpanded: $workoutsExpanded)
                     ArticlesView()
                     ContactMeView()
