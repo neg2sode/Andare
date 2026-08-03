@@ -12,7 +12,6 @@ import SwiftData
 
 struct HomeView: View {
     @StateObject private var rideSessionManager: RideSessionManager
-    @StateObject private var drawerState = DrawerState()
     @StateObject private var pagingState: WorkoutPagingState
     
     @ObservedObject var alertManager = AlertManager.shared
@@ -20,6 +19,7 @@ struct HomeView: View {
     @ObservedObject var healthKitManager = HealthKitManager.shared
     
     @State private var isDrawerPresented = false
+    @State private var drawerDetent: PresentationDetent = .height(100)
     @State private var isShowingLocationWarning = false
     @State private var sessionState: SessionState = .idle
     
@@ -130,11 +130,13 @@ struct HomeView: View {
                     .transition(.opacity.animation(.easeInOut))
                 }
             }
-            .drawerSheet(isPresented: $isDrawerPresented, drawerState: drawerState) {
-                DrawerView()
-                    .environmentObject(drawerState)
+            .sheet(isPresented: $isDrawerPresented) {
+                DrawerView(drawerDetent: $drawerDetent)
                     .environmentObject(pagingState)
-                    .modelContainer(for: [WorkoutDataModel.self, CadenceSegmentModel.self])
+                    .presentationDetents([.height(100), .large], selection: $drawerDetent)
+                    .presentationBackgroundInteraction(.enabled(upThrough: .height(100)))
+                    .presentationDragIndicator(.visible)
+                    .interactiveDismissDisabled()
             }
             .onAppear {
                 Task { @MainActor in

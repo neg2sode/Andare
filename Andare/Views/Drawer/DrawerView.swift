@@ -13,8 +13,8 @@ struct DrawerView: View {
     @State private var gearIsRotating = false
     
     @ObservedObject private var alertManager = AlertManager.shared
-    
-    @EnvironmentObject var drawerState: DrawerState
+
+    @Binding var drawerDetent: PresentationDetent
     @EnvironmentObject var pagingState: WorkoutPagingState
 
     var body: some View {
@@ -55,7 +55,7 @@ struct DrawerView: View {
                     ContactMeView()
                 }
             }
-            .onChange(of: drawerState.selectedDetent) { _, newDetent in
+            .onChange(of: drawerDetent) { _, newDetent in
                 guard newDetent != .large else { return }
                 withAnimation(.easeInOut(duration: 0.3)) {
                     workoutsExpanded = false
@@ -63,7 +63,7 @@ struct DrawerView: View {
             }
             
             // MARK: - Footnote
-            if drawerState.selectedDetent == .large {
+            if drawerDetent == .large {
                 Text("Made with ☕️ by neg2sode")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
