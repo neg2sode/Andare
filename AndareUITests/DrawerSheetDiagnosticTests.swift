@@ -31,10 +31,15 @@ final class DrawerSheetDiagnosticTests: XCTestCase {
         sleep(2)
         attach(app, "3-collapsed-tiny")
 
+        // Tap the right-most page indicator dot: should switch to Walking
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.61, dy: 0.955)).tap()
+        sleep(2)
+        attach(app, "4-after-dot-tap")
+
         // Background interaction: the start button behind the sheet should react
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.43)).tap()
         sleep(2)
-        attach(app, "4-after-background-tap")
+        attach(app, "5-after-background-tap")
     }
 
     @MainActor
