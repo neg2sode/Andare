@@ -19,12 +19,18 @@ struct ArticleDetailView: View {
                 Image(article.thumbnailImageName)
                      .resizable()
                      .aspectRatio(contentMode: .fit) // Fit within bounds
+                     .frame(maxWidth: .infinity)
+                     .clipped()
                      .padding(.bottom)
 
                 // Content based on the article
                 articleSpecificContent()
                     .padding(.horizontal) // Add horizontal padding to text content
             }
+            // Pin the content to the scroll view's own width. A fitted image can
+            // round up to a fraction of a point wider than the screen, which
+            // otherwise makes the whole article scroll sideways.
+            .containerRelativeFrame(.horizontal)
         }
         .navigationTitle(article.title) // Use article title for navigation bar
         .navigationBarTitleDisplayMode(.inline) // Keep title inline like screenshot
