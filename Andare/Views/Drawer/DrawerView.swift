@@ -39,6 +39,7 @@ struct DrawerView: View {
                         )
                 }
                 .padding(.horizontal, 6)
+                .accessibilityLabel("Preferences")
                 .onAppear {
                     gearIsRotating = true
                 }

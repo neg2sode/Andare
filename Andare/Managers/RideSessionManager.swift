@@ -32,6 +32,7 @@ final class RideSessionManager: ObservableObject {
     @AppStorage("userHeightCm") private var userHeightCm: Double = 170.0
     @AppStorage("realTimeAlertsEnabled") private var realTimeAlertsEnabled: Bool = false
     @AppStorage("finishWorkoutAlertEnabled") private var finishWorkoutAlertEnabled: Bool = false
+    @AppStorage("notificationFrequencyRawValue") private var notificationFrequencyRawValue: String = NotificationFrequency.normal.rawValue
 
     // --- Dependencies ---
     var motionManager: MotionManager
@@ -61,8 +62,13 @@ final class RideSessionManager: ObservableObject {
     // --- Constants ---
     private let halfMaxLogEntries = 500
     private let halfMaxBufferSize = 5
-    private let maxSplitCount = 3
     private let minDistanceForSlope = 7.5
+
+    // Alert checks run every `maxSplitCount` cadence sections (81.92s each):
+    // ~4 minutes by default, ~82 seconds on high frequency.
+    private var maxSplitCount: Int {
+        NotificationFrequency(rawValue: notificationFrequencyRawValue) == .high ? 1 : 3
+    }
 
     // --- Internal State ---
     private var workoutBuilder: HKWorkoutBuilder? // Use the Builder

@@ -128,6 +128,55 @@ final class HealthKitManager: ObservableObject {
         }
     }
     
+    /// Most recent height sample in centimetres, or nil when unreadable.
+    func fetchHeight() async -> Double? {
+        let heightType = HKQuantityType(.height)
+        guard healthStore.authorizationStatus(for: heightType) == .sharingAuthorized else { return nil }
+
+        let queryPredicate = HKQuery.predicateForSamples(withStart: Date.distantPast, end: Date(), options: .strictEndDate)
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+
+        return await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(sampleType: heightType, predicate: queryPredicate, limit: 1, sortDescriptors: [sortDescriptor]) { (_, samples, error) in
+                guard error == nil, let quantitySample = samples?.first as? HKQuantitySample else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                continuation.resume(returning: quantitySample.quantity.doubleValue(for: .meterUnit(with: .centi)))
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    /// Writes a body mass sample in kilograms. Returns false when sharing is
+    /// not authorised or the save fails.
+    func saveBodyMass(_ kilograms: Double) async -> Bool {
+        let quantity = HKQuantity(unit: .gramUnit(with: .kilo), doubleValue: kilograms)
+        return await saveProfileSample(type: HKQuantityType(.bodyMass), quantity: quantity)
+    }
+
+    /// Writes a height sample in centimetres. Returns false when sharing is
+    /// not authorised or the save fails.
+    func saveHeight(_ centimetres: Double) async -> Bool {
+        let quantity = HKQuantity(unit: .meterUnit(with: .centi), doubleValue: centimetres)
+        return await saveProfileSample(type: HKQuantityType(.height), quantity: quantity)
+    }
+
+    private func saveProfileSample(type: HKQuantityType, quantity: HKQuantity) async -> Bool {
+        guard HKHealthStore.isHealthDataAvailable(),
+              healthStore.authorizationStatus(for: type) == .sharingAuthorized else { return false }
+
+        let now = Date()
+        let sample = HKQuantitySample(type: type, quantity: quantity, start: now, end: now)
+
+        do {
+            try await healthStore.save(sample)
+            return true
+        } catch {
+            return false
+        }
+    }
+
     func profileCharacteristicsAuthorised() -> Bool {
         let requiredTypes: Set = [
             HKQuantityType(.bodyMass),
