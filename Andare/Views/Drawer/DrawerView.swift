@@ -76,13 +76,9 @@ struct DrawerView: View {
                 PageIndicatorView(
                     numberOfPages: pagingState.allWorkoutTypes.count,
                     currentPage: pagingState.allWorkoutTypes.firstIndex(of: pagingState.selectedWorkoutType) ?? 0
-                ) { index in
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                        pagingState.selectedWorkoutType = pagingState.allWorkoutTypes[index]
-                    }
-                }
+                )
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 2)
+                .padding(.vertical, 8)
                 .transition(.opacity.animation(.easeInOut))
             }
         }
