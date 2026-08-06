@@ -48,7 +48,7 @@ Other measurements:
   - **Recent Workouts** — today/this-week windowing, cadence-led thumbnail cards with zone-coloured units and ↑/↓ hints, swipe to hide or delete (with confirmation), tap for the full summary.
   - **Articles** — in-app reading on cadence, consistency and technique.
   - **Contact Me** — rate, feedback mail, and links.
-  - **Page indicator** — tappable dots (44 pt hit targets) that switch the home carousel; wrapped in Liquid Glass on iOS 26+.
+  - **Page indicator** — dots mirroring which workout the home carousel is showing.
 - **Preferences** — unit system (metric / imperial / follow locale), profile (with Apple Health sync), notification toggles, and a permissions overview with live statuses.
 - **Notifications** — optional local alerts for ride status and cadence guidance while the screen is off.
 - **Live Activity** (`AndareWidgets` target) — Lock Screen banner plus Dynamic Island compact/expanded layouts showing elapsed time and preferred cadence.
@@ -76,10 +76,12 @@ The project uses filesystem-synchronised Xcode groups: adding or moving source f
 
 ## Testing
 
-Two UI-test suites double as scripted walkthroughs and capture screenshots at every step:
+The UI-test suites double as scripted walkthroughs and capture screenshots at every step:
 
 - `WorkoutFlowDiagnosticTests` — start → guide → permission grants (including the system HealthKit sheet and location alert) → countdown skip → live screen → gyro panel → hold-to-stop → summary.
-- `DrawerSheetDiagnosticTests` — drawer detents, expand/collapse, page-dot tap, background interaction.
+- `DrawerSheetDiagnosticTests` — drawer detents, expand/collapse, background interaction.
+- `PreferencesDiagnosticTests` — editable profile rows, keyboard toolbar, Apple Health sync indicator, notification info alerts.
+- `ArticleLayoutDiagnosticTests` — asserts no article content is wider than the screen, which would turn the vertical scroll view into a two-axis one.
 
 ```sh
 xcodebuild -scheme Andare \
@@ -100,9 +102,8 @@ xcrun xcresulttool export attachments --path results.xcresult --output-path shot
 
 ```
 Andare/
-├── AndareApp.swift             # entry point; SwiftData container; TipKit config;
+├── AndareApp.swift             # entry point; SwiftData container;
 │                               #   haptic engine lifecycle
-├── AndareTips.swift            # TipKit definitions
 ├── Managers/                   # long-lived services (mostly singletons)
 │   ├── RideSessionManager.swift      # session orchestrator: HK workout builder,
 │   │                                 #   location, motion, live activity, gyro stream
