@@ -68,9 +68,11 @@ struct RecentWorkoutsView: View {
     }
     
     private var emptyStateView: some View {
+        // Same dashed circle the cadence tile uses for its no-data state, so
+        // the two empty sections read as one absence rather than two.
         ContentUnavailableView(
             scope == .today ? "No Workouts Yet Today" : "No Workouts Yet This Week",
-            systemImage: "figure.run.circle"
+            systemImage: "circle.dashed"
         )
         .padding(.vertical)
         .transition(.opacity)

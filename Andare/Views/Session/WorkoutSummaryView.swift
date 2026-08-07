@@ -362,11 +362,15 @@ struct WorkoutSummaryView: View {
     }
 
     private var mapSection: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 12) {
             switch data.mapDisplayContext {
             case .full:
-                // The map is its own picture and needs no card or title around
-                // it — a background behind a photograph is just a border.
+                // Titled like the chart, but with no card behind the map — a
+                // background behind a photograph is just a border.
+                Text("Route Map")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
                 if let polyline = self.routePolyline,
                    let startCoord = self.coordinates.first,
                    let endCoord = self.coordinates.last {

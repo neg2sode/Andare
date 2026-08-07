@@ -52,6 +52,8 @@ struct ContactMeView: View {
                 }
                 .foregroundStyle(.primary)
             }
+            .cardStyle()
+            .padding(.horizontal)
         }
     }
     

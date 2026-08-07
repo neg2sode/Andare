@@ -27,11 +27,13 @@ final class WorkoutSummaryLayoutTests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Workout Summary"].exists,
                        "the stats section should have been renamed")
 
-        // The map is raw now — no title above it.
-        XCTAssertFalse(app.staticTexts["Route Map"].exists,
-                       "the route map should no longer carry a title")
+        // The map keeps its title; only its card background went away.
+        let mapTitle = app.staticTexts["Route Map"]
+        XCTAssertTrue(mapTitle.exists, "the route map should carry a title")
 
-        // Chart above stats.
+        // Map above chart above stats.
+        XCTAssertLessThan(mapTitle.frame.minY, chartTitle.frame.minY,
+                          "Route Map should sit above Cadence Over Time")
         XCTAssertLessThan(chartTitle.frame.minY, statsTitle.frame.minY,
                           "Cadence Over Time should sit above Workout Details")
 
