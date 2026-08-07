@@ -22,7 +22,7 @@ enum CadenceZone: String, Codable {
         }
     }
 
-    var color: Color {
+    var colour: Color {
         switch self {
         case .low: return .lowCadenceColour
         case .normal: return .cadenceColour

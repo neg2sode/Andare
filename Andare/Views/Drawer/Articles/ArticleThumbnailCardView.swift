@@ -18,6 +18,8 @@ struct ArticleThumbnailCardView: View {
                 // Define a fixed height or aspect ratio for the image area
                 .frame(height: 200)
                 .clipped() // Prevent image from spilling out
+                // Decorative: without this VoiceOver reads the asset name.
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(article.title)
@@ -34,5 +36,8 @@ struct ArticleThumbnailCardView: View {
         .cardStyle(radius: 10)
         .shadow(radius: 3, x: 0, y: 2) // Optional shadow
         .padding(.vertical, 8) // Space between cards
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(article.title). \(article.subtitle)")
+        .accessibilityAddTraits(.isButton)
     }
 }

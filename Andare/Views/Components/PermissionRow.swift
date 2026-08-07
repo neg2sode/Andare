@@ -48,8 +48,19 @@ struct PermissionRow: View {
                 Image(systemName: status.iconName)
                     .font(subtitle == nil ? .body : .title2)
                     .foregroundStyle(status.iconColour)
+                    .accessibilityHidden(true)
             }
         }
         .contentShape(Rectangle())
+        // The status is colour and glyph only, so spell it out for VoiceOver.
+        .accessibilityElement(children: status == .notDetermined && grantAction != nil ? .contain : .ignore)
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var accessibilityDescription: String {
+        var parts = [title]
+        if let subtitle { parts.append(subtitle) }
+        parts.append(status.accessibilityDescription)
+        return parts.joined(separator: ", ")
     }
 }

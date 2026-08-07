@@ -156,7 +156,7 @@ struct WorkoutSummaryView: View {
     private var bouncingBackgroundIcon: some View {
         Image(systemName: data.workoutType.sfSymbol)
             .font(.system(size: 140))
-            .foregroundStyle(cadenceZone.color.opacity(0.15))
+            .foregroundStyle(cadenceZone.colour.opacity(0.15))
             .offset(y: isBouncing ? -6 : 0)
             .animation(
                 .easeInOut(duration: bounceDuration / 2)
@@ -183,13 +183,13 @@ struct WorkoutSummaryView: View {
                 
                 Text(data.workoutType.cadenceInfo.unit)
                     .font(.system(size: 24, weight: .semibold, design: .rounded))
-                    .foregroundStyle(cadenceZone.color)
+                    .foregroundStyle(cadenceZone.colour)
             }
             
             // Zone label
             HStack(spacing: 6) {
                 Circle()
-                    .fill(cadenceZone.color)
+                    .fill(cadenceZone.colour)
                     .frame(width: 10, height: 10)
                 
                 Text(cadenceZoneLabel)
@@ -203,7 +203,7 @@ struct WorkoutSummaryView: View {
         .background(
             ZStack {
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(cadenceZone.color.opacity(0.08))
+                    .fill(cadenceZone.colour.opacity(0.08))
                 bouncingBackgroundIcon
             }
             .clipShape(RoundedRectangle(cornerRadius: 20))

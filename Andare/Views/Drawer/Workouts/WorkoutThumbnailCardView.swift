@@ -47,6 +47,28 @@ struct WorkoutThumbnailCardView: View {
             .shadow(color: .black.opacity(0.1), radius: 4, y: 0)
         }
         .buttonStyle(CardPressStyle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityDescription)
+        .accessibilityHint("Opens the workout summary")
+    }
+
+    /// The card conveys its zone through colour and an arrow glyph, neither of
+    /// which VoiceOver can read, so state it.
+    private var accessibilityDescription: String {
+        var parts = [workout.workoutType.rawValue]
+
+        if workout.averageCadence != 0 {
+            let stats = formatter.formatCadence(workout.averageCadence, workout.workoutType)
+            parts.append("average cadence \(stats.value) \(stats.unit)")
+            if cadenceZone != .zero {
+                parts.append("\(cadenceZone.displayName) zone")
+            }
+        } else {
+            parts.append("duration \(formattedDuration)")
+        }
+
+        parts.append("\(formattedDate), \(formattedTimeRange)")
+        return parts.joined(separator: ", ")
     }
 
     // MARK: - Computed Properties for Display Logic
@@ -66,13 +88,13 @@ struct WorkoutThumbnailCardView: View {
 
                     Text(stats.unit)
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(cadenceZone.color)
+                        .foregroundStyle(cadenceZone.colour)
                 }
 
                 if cadenceZone == .low || cadenceZone == .high {
                     Image(systemName: cadenceZone == .low ? "arrow.down" : "arrow.up")
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(cadenceZone.color)
+                        .foregroundStyle(cadenceZone.colour)
                 }
             }
         } else {

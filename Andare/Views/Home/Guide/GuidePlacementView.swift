@@ -127,6 +127,8 @@ struct GuidePlacementView: View {
         .opacity(hasAppeared ? 1 : 0)
         .scaleEffect(hasAppeared ? 1 : 0.9)
         .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.1), value: hasAppeared)
+        // Decorative illustration — the placement checklist below says it in words.
+        .accessibilityHidden(true)
     }
 
     /// iPhone position relative to workout figure
@@ -149,6 +151,7 @@ struct GuidePlacementView: View {
                 Image(systemName: "iphone")
                     .font(.headline)
                     .foregroundStyle(Color.accentColor)
+                    .accessibilityHidden(true)
 
                 Text("Phone Placement")
                     .font(.headline)
@@ -195,6 +198,7 @@ struct RiskWarningView: View {
         .padding()
         .background(Color.orange.opacity(0.15))
         .clipShape(RoundedRectangle(cornerRadius: 16))
+        .accessibilityElement(children: .combine)
         .scaleEffect(hasAppeared ? 1.0 : 0.95)
         .onAppear {
             // A slight delay makes the pulse feel more intentional and separated

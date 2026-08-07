@@ -32,6 +32,16 @@ enum PermissionStatus {
             case .notDetermined: .gray
         }
     }
+
+    /// Spoken equivalent of the status icon, which carries no text.
+    var accessibilityDescription: String {
+        switch self {
+            case .granted: "granted"
+            case .denied: "denied"
+            case .warning: "needs attention"
+            case .notDetermined: "not set"
+        }
+    }
 }
 
 // Extend the system types to map to our view-specific enum

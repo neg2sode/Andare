@@ -25,5 +25,8 @@ struct PageIndicatorView: View {
         }
         // Add a subtle animation when the current page changes.
         .animation(.spring(response: 0.2, dampingFraction: 0.8), value: currentPage)
+        // Purely decorative: the dots restate which workout the carousel is
+        // showing, which the start button below already announces.
+        .accessibilityHidden(true)
     }
 }

@@ -96,7 +96,7 @@ struct ContactRow: View {
             }
             
             Spacer()
-            
+
             Image(systemName: "chevron.right")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.tertiary)
@@ -105,6 +105,9 @@ struct ContactRow: View {
         .padding(.vertical, 12)
         .padding(.horizontal)
         .contentShape(Rectangle())
+        // Icons and the chevron are decoration; the title carries the meaning.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
     }
 }
 

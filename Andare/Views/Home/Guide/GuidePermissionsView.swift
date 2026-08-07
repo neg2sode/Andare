@@ -179,6 +179,7 @@ struct GuidePermissionsView: View {
                         .foregroundStyle(showPermissionDetails ? Color.accentColor : .secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(showPermissionDetails ? "Hide permission details" : "Show permission details")
             }
             .opacity(hasAppeared ? 1 : 0)
             .animation(.easeIn(duration: 0.3).delay(0.2), value: hasAppeared)

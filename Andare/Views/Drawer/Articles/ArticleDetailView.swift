@@ -21,6 +21,7 @@ struct ArticleDetailView: View {
                      .aspectRatio(contentMode: .fit) // Fit within bounds
                      .frame(maxWidth: .infinity)
                      .clipped()
+                     .accessibilityHidden(true) // decorative header photo
                      .padding(.bottom)
 
                 // Content based on the article
@@ -62,6 +63,7 @@ struct ArticleDetailView: View {
                         Image(systemName: "arrow.up.right")
                             .font(.title3.weight(.semibold))
                             .foregroundStyle(Color.accentColor)
+                            .accessibilityHidden(true)
 
                         Text("Going Up")
                             .font(.title3.weight(.semibold))
@@ -81,6 +83,7 @@ struct ArticleDetailView: View {
                         Image(systemName: "arrow.down.right")
                             .font(.title3.weight(.semibold))
                             .foregroundStyle(Color.accentColor)
+                            .accessibilityHidden(true)
 
                         Text("Going Down")
                             .font(.title3.weight(.semibold))
@@ -173,6 +176,7 @@ struct ArticleDetailView: View {
             Image(systemName: icon)
                 .font(.title3)
                 .foregroundStyle(Color.accentColor)
+                .accessibilityHidden(true)
             Text(text)
                 .font(.callout)
         }
@@ -180,5 +184,7 @@ struct ArticleDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.tertiarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Tip: \(text)")
     }
 }

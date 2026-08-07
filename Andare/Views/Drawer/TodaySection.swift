@@ -44,6 +44,10 @@ struct TodaySection: View {
                     icon: "sun.max.fill",
                     iconTint: .orange
                 )
+                // The em-dash placeholder means nothing spoken aloud.
+                .accessibilityLabel(daylightMinutes == nil
+                                    ? "Time in Daylight, no data"
+                                    : "Time in Daylight, \(daylightValue) minutes")
 
                 SummaryStatCard(
                     label: "Steps",
@@ -53,6 +57,7 @@ struct TodaySection: View {
                     icon: "shoeprints.fill",
                     iconTint: .cadenceColour
                 )
+                .accessibilityLabel(steps == nil ? "Steps, no data" : "Steps, \(stepsValue)")
             }
             .redacted(reason: isLoading ? .placeholder : [])
 
@@ -65,8 +70,10 @@ struct TodaySection: View {
                 } label: {
                     Label("Allow Health Access", systemImage: "heart.text.square")
                         .font(.subheadline.weight(.medium))
+                        // Text alone is an 18pt-tall target; pad it to 44.
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                 }
-                .padding(.top, 2)
             }
         }
         .padding(.horizontal)
