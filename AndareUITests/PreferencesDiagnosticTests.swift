@@ -26,6 +26,10 @@ final class PreferencesDiagnosticTests: XCTestCase {
         sleep(2)
         attach(app, "1-preferences")
 
+        // Health Data sits with the other permissions and states its status.
+        let healthRow = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Health Data'")).firstMatch
+        XCTAssertTrue(healthRow.waitForExistence(timeout: 5), "Health Data permission row missing")
+
         // Profile rows are editable: focus weight, type, dismiss the keyboard.
         let weightField = app.textFields.element(boundBy: 0)
         XCTAssertTrue(weightField.waitForExistence(timeout: 5), "profile weight field missing")

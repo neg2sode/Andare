@@ -28,6 +28,7 @@ struct PreferencesView: View {
 
     @State private var showingLocationWarningDetail = false
     @State private var profileSync: ProfileSyncState = .checking
+    @State private var healthDataAccess: HealthKitManager.TodayDataAccess = .notRequested
     @State private var syncSpin = false
     @State private var syncTask: Task<Void, Never>?
     @FocusState private var focusedField: ProfileField?
@@ -93,6 +94,7 @@ struct PreferencesView: View {
         }
         .task {
             notificationManager.refreshStatus()
+            healthDataAccess = await healthKitManager.todayDataAccess()
             await loadProfileFromHealth()
         }
         .onChange(of: focusedField) { previous, current in
@@ -131,6 +133,15 @@ struct PreferencesView: View {
                 // Workouts Row
                 Button(action: handleWorkoutsRowTap) {
                     PermissionRow(title: "Workouts", status: healthKitManager.authorisationStatus(for: HKObjectType.workoutType()).permissionStatus)
+                        .padding(.horizontal)
+                        .padding(.vertical, 13)
+                }
+
+                Divider().padding(.leading)
+
+                // Health data row (read-only: Time in Daylight and Steps)
+                Button(action: handleHealthDataRowTap) {
+                    PermissionRow(title: "Health Data", status: healthDataStatus)
                         .padding(.horizontal)
                         .padding(.vertical, 13)
                 }
@@ -437,6 +448,41 @@ struct PreferencesView: View {
         }
     }
     
+    /// Read access can only be inferred from whether data comes back, so the
+    /// row never claims "denied" — at worst it asks the user to check Health.
+    private var healthDataStatus: PermissionStatus {
+        switch healthDataAccess {
+        case .notRequested, .unavailable: .notDetermined
+        case .readable: .granted
+        case .unreadable: .warning
+        }
+    }
+
+    private func handleHealthDataRowTap() {
+        switch healthDataAccess {
+        case .unavailable:
+            alertManager.showAlert(
+                title: "Health Data",
+                message: "Health data isn't available on this device."
+            )
+        case .notRequested:
+            Task {
+                await healthKitManager.requestTodayAuthorisation()
+                healthDataAccess = await healthKitManager.todayDataAccess()
+            }
+        case .readable:
+            alertManager.showAlert(
+                title: "Health Data",
+                message: "Andare reads Time in Daylight and Steps to fill in the Today cards. It only reads them — nothing is written back, and the data never leaves your device."
+            )
+        case .unreadable:
+            alertManager.showAlert(
+                title: "No Health Data Coming Through",
+                message: "Andare isn't getting Time in Daylight or Steps back from Health. iOS never tells an app whether a read was allowed, so this could be denied access or simply no recorded data.\n\nTo check, open the Health app → your profile → Apps → Andare."
+            )
+        }
+    }
+
     private func handleNotificationsRowTap() {
         switch notificationManager.authorizationStatus {
         case .notDetermined:

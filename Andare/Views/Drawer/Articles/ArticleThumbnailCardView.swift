@@ -33,7 +33,7 @@ struct ArticleThumbnailCardView: View {
             .padding([.leading, .trailing, .bottom]) // Padding for text content
         }
         // Styling for the card itself
-        .cardStyle(radius: 10)
+        .cardStyle(radius: 20)
         .shadow(radius: 3, x: 0, y: 2) // Optional shadow
         .padding(.vertical, 8) // Space between cards
         .accessibilityElement(children: .ignore)

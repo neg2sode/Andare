@@ -86,14 +86,42 @@ final class HealthKitManager: ObservableObject {
         try? await healthStore.requestAuthorization(toShare: [], read: todayReadTypes)
     }
 
+    /// What we can honestly say about reading the Today types.
+    enum TodayDataAccess {
+        case unavailable    // no HealthKit on this device
+        case notRequested   // the read sheet has never been shown
+        case readable       // a query returned data, so reads are allowed
+        case unreadable     // asked, but nothing comes back
+    }
+
+    /// HealthKit deliberately never reports read authorisation — a denied read
+    /// is indistinguishable from no data. The only honest signal is whether a
+    /// query actually returns something, so probe a week rather than today,
+    /// since today can legitimately be empty.
+    func todayDataAccess() async -> TodayDataAccess {
+        guard HKHealthStore.isHealthDataAvailable() else { return .unavailable }
+        if await shouldRequestTodayAuthorisation() { return .notRequested }
+
+        let weekStart = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        async let steps = sum(.stepCount, unit: .count(), since: weekStart)
+        async let daylight = sum(.timeInDaylight, unit: .minute(), since: weekStart)
+
+        let (weekSteps, weekDaylight) = await (steps, daylight)
+        return (weekSteps ?? weekDaylight) != nil ? .readable : .unreadable
+    }
+
     /// Today's cumulative sum for a quantity type, in the given unit.
     /// Returns nil when there is no readable data — HealthKit does not
     /// distinguish "read denied" from "no data", so nil covers both.
     func fetchTodaysSum(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit) async -> Double? {
+        await sum(identifier, unit: unit, since: Calendar.current.startOfDay(for: Date()))
+    }
+
+    /// Cumulative sum for a quantity type from `start` until now. Read-only.
+    private func sum(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, since start: Date) async -> Double? {
         guard HKHealthStore.isHealthDataAvailable() else { return nil }
         let quantityType = HKQuantityType(identifier)
-        let startOfDay = Calendar.current.startOfDay(for: Date())
-        let predicate = HKQuery.predicateForSamples(withStart: startOfDay, end: Date(), options: .strictStartDate)
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: Date(), options: .strictStartDate)
 
         return await withCheckedContinuation { continuation in
             let query = HKStatisticsQuery(quantityType: quantityType, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, statistics, _ in

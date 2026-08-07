@@ -15,17 +15,23 @@ struct TodaySection: View {
     @State private var daylightMinutes: Double?
     @State private var steps: Double?
     @State private var isLoading = true
-    @State private var canRequestAccess = false
+    @State private var access: HealthKitManager.TodayDataAccess = .notRequested
 
     @Environment(\.scenePhase) private var scenePhase
 
+    private var canRequestAccess: Bool { access == .notRequested }
+
+    /// A nil sum means "nothing recorded" when reads demonstrably work, and
+    /// "we can't see your data" otherwise — only the latter deserves a dash.
+    private var placeholder: String { access == .readable ? "0" : "–" }
+
     private var daylightValue: String {
-        guard let daylightMinutes else { return "–" }
+        guard let daylightMinutes else { return placeholder }
         return NumberFormatter.integerFormatter.string(from: NSNumber(value: daylightMinutes)) ?? "0"
     }
 
     private var stepsValue: String {
-        guard let steps else { return "–" }
+        guard let steps else { return placeholder }
         return NumberFormatter.groupedIntegerFormatter.string(from: NSNumber(value: steps)) ?? "0"
     }
 
@@ -39,13 +45,13 @@ struct TodaySection: View {
                 SummaryStatCard(
                     label: "Time in Daylight",
                     value: daylightValue,
-                    unit: daylightMinutes != nil ? "MIN" : "",
+                    unit: daylightMinutes != nil || access == .readable ? "MIN" : "",
                     unitColour: .durationColour,
                     icon: "sun.max.fill",
                     iconTint: .orange
                 )
                 // The em-dash placeholder means nothing spoken aloud.
-                .accessibilityLabel(daylightMinutes == nil
+                .accessibilityLabel(daylightMinutes == nil && access != .readable
                                     ? "Time in Daylight, no data"
                                     : "Time in Daylight, \(daylightValue) minutes")
 
@@ -57,7 +63,9 @@ struct TodaySection: View {
                     icon: "shoeprints.fill",
                     iconTint: .cadenceColour
                 )
-                .accessibilityLabel(steps == nil ? "Steps, no data" : "Steps, \(stepsValue)")
+                .accessibilityLabel(steps == nil && access != .readable
+                                    ? "Steps, no data"
+                                    : "Steps, \(stepsValue)")
             }
             .redacted(reason: isLoading ? .placeholder : [])
 
@@ -89,7 +97,7 @@ struct TodaySection: View {
 
     private func refresh() async {
         let manager = HealthKitManager.shared
-        canRequestAccess = await manager.shouldRequestTodayAuthorisation()
+        access = await manager.todayDataAccess()
         daylightMinutes = await manager.fetchTodaysSum(.timeInDaylight, unit: .minute())
         steps = await manager.fetchTodaysSum(.stepCount, unit: .count())
         isLoading = false
