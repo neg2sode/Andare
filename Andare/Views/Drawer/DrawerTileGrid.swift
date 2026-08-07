@@ -27,29 +27,39 @@ struct DrawerTileGrid: View {
     @State private var healthValues: [DrawerTile: Double] = [:]
     @State private var access: HealthKitManager.TodayDataAccess = .notRequested
     @State private var isLoading = true
+    @State private var isShowingEditor = false
 
     @Environment(\.scenePhase) private var scenePhase
 
-    // Bridged from the Phase 8 hide toggles until the layout editor lands.
-    @AppStorage(DrawerCard.today.storageKey) private var showToday = true
-    @AppStorage(DrawerCard.cadenceSummary.storageKey) private var showCadenceSummary = true
+    @AppStorage(DrawerLayoutMigration.storageKey) private var layout = DrawerLayout.default
 
-    private var tiles: [DrawerTile] {
-        var result: [DrawerTile] = []
-        if showToday { result += [.daylight, .steps] }
-        if showCadenceSummary { result.append(.cadence) }
-        return result
-    }
+    private var tiles: [DrawerTile] { layout.entries.map(\.tile) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                HStack(spacing: 12) {
-                    ForEach(row) { tile in
-                        view(for: tile)
+            VStack(alignment: .leading, spacing: 12) {
+                if tiles.isEmpty {
+                    // Without this the drawer would be a dead end: no tile to
+                    // long-press means no way back to the editor from here.
+                    emptyState
+                } else {
+                    ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                        HStack(spacing: 12) {
+                            ForEach(row) { tile in
+                                view(for: tile)
+                            }
+                        }
                     }
                 }
             }
+            // Long press to customize, kept off the Health button below so it
+            // cannot swallow that tap.
+            .contentShape(Rectangle())
+            .onLongPressGesture(minimumDuration: 0.5) {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                isShowingEditor = true
+            }
+            .accessibilityAction(named: "Customize tiles") { isShowingEditor = true }
 
             if access == .notRequested && tiles.contains(where: \.isHealthKitBacked) {
                 Button {
@@ -71,6 +81,21 @@ struct DrawerTileGrid: View {
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active { Task { await refresh() } }
         }
+        .sheet(isPresented: $isShowingEditor) {
+            CustomizeDrawerView()
+        }
+    }
+
+    private var emptyState: some View {
+        Button {
+            isShowingEditor = true
+        } label: {
+            Label("Add Tiles", systemImage: "plus.circle")
+                .font(.subheadline.weight(.medium))
+                .frame(maxWidth: .infinity, minHeight: 60)
+                .contentShape(Rectangle())
+        }
+        .cardStyle()
     }
 
     /// `LazyVGrid` cannot span columns, so pair up consecutive narrow tiles and
@@ -132,7 +157,7 @@ struct DrawerTileGrid: View {
     private var healthPlaceholder: String { access == .readable ? "0" : "–" }
 
     private func aggregation(for tile: DrawerTile) -> Aggregation {
-        tile.defaultAggregation
+        layout.aggregation(for: tile)
     }
 
     private func reading(for tile: DrawerTile) -> Reading {

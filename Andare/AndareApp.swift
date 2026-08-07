@@ -12,6 +12,20 @@ import SwiftData
 struct AndareApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        // UI tests share one app install across test methods, so a test that
+        // rearranges the drawer would otherwise leak its layout into the next
+        // one — silently making them order-dependent.
+        if ProcessInfo.processInfo.arguments.contains("-resetDrawerLayout") {
+            UserDefaults.standard.removeObject(forKey: DrawerLayoutMigration.storageKey)
+        }
+
+        // Carries the old per-card hide toggles into the drawer's tile layout.
+        // Has to run before any view reads the layout, and only ever does work
+        // once.
+        DrawerLayoutMigration.runIfNeeded()
+    }
+
     var body: some Scene {
         WindowGroup {
             HomeView()

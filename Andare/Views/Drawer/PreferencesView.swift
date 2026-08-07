@@ -25,10 +25,8 @@ struct PreferencesView: View {
     @AppStorage("unitSystemPreference") private var unitSystem: UnitSystem = .systemDefault
     @AppStorage("userWeightKg") private var userWeightKg: Double = 70.0
     @AppStorage("userHeightCm") private var userHeightCm: Double = 170.0
-    @AppStorage(DrawerCard.today.storageKey) private var showToday: Bool = true
-    @AppStorage(DrawerCard.cadenceSummary.storageKey) private var showCadenceSummary: Bool = true
-
     @State private var showingLocationWarningDetail = false
+    @State private var isShowingDrawerEditor = false
     @State private var profileSync: ProfileSyncState = .checking
     @State private var healthDataAccess: HealthKitManager.TodayDataAccess = .notRequested
     @State private var syncSpin = false
@@ -98,6 +96,7 @@ struct PreferencesView: View {
             }
         }
         .sheet(isPresented: $showingLocationWarningDetail) { LocationWarningDetailView() }
+        .sheet(isPresented: $isShowingDrawerEditor) { CustomizeDrawerView() }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .toolbar {
             // decimalPad has no return key, so give the fields a way to resign
@@ -291,21 +290,27 @@ struct PreferencesView: View {
         }
     }
     
-    /// Restores the drawer cards a long press can hide.
+    /// A second way into the tile editor, for when the drawer has no tiles left
+    /// to long-press.
     private var drawerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             SectionHeader(title: "Drawer")
 
             VStack(spacing: 0) {
-                Toggle("Today", isOn: $showToday)
+                Button {
+                    isShowingDrawerEditor = true
+                } label: {
+                    HStack {
+                        Text("Customize Tiles")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
                     .padding(.horizontal)
                     .padding(.vertical, 13)
-
-                Divider().padding(.leading)
-
-                Toggle("Summary", isOn: $showCadenceSummary)
-                    .padding(.horizontal)
-                    .padding(.vertical, 13)
+                }
+                .tint(.primary)
             }
             .cardStyle(radius: 12)
             .padding(.horizontal)
