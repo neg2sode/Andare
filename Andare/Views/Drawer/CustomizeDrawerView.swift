@@ -26,7 +26,10 @@ struct CustomizeDrawerView: View {
                         row(for: entry)
                     }
                     .onMove(perform: move)
-                    .onDelete(perform: remove)
+                    // Removal is a one-tap ⊖ in the row instead. Both the swipe
+                    // and edit mode's own minus need a second confirming tap,
+                    // which is friction for something a single tap restores.
+                    .deleteDisabled(true)
 
                     if layout.entries.isEmpty {
                         Text("No tiles. Add one below.")
@@ -56,9 +59,17 @@ struct CustomizeDrawerView: View {
             .navigationTitle("Customize")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                // A tick, not an ✕: leaving this sheet confirms an arrangement
+                // rather than abandoning one. Matches the Preferences header.
                 ToolbarItem(placement: .confirmationAction) {
                     if #available(iOS 26.0, *) {
-                        Button(role: .close) { dismiss() }
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "checkmark")
+                        }
+                        .buttonStyle(.glassProminent)
+                        .accessibilityLabel("Done")
                     } else {
                         Button("Done") { dismiss() }
                     }
@@ -69,65 +80,90 @@ struct CustomizeDrawerView: View {
 
     @ViewBuilder
     private func row(for entry: DrawerLayout.Entry) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label {
-                Text(entry.tile.editorTitle)
-            } icon: {
-                Image(systemName: entry.tile.icon)
-                    .foregroundStyle(entry.tile.iconTint)
+        HStack(spacing: 12) {
+            Button {
+                remove(entry.tile)
+            } label: {
+                Image(systemName: "minus.circle.fill")
+                    .foregroundStyle(.red)
             }
+            // A List row would otherwise treat a tap anywhere as this button.
+            .buttonStyle(.plain)
+            .accessibilityLabel("Remove \(entry.tile.editorTitle)")
 
-            // A count of workouts off cadence has no average, so the control
-            // only appears where both readings mean something.
-            if entry.tile.supportsAggregation {
-                HStack {
-                    Text("This week")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+            // Title and its aggregation share a column, so the second line
+            // reads as belonging to the tile rather than to the remove button.
+            VStack(alignment: .leading, spacing: 6) {
+                Label {
+                    Text(entry.tile.editorTitle)
+                } icon: {
+                    Image(systemName: entry.tile.icon)
+                        .foregroundStyle(entry.tile.iconTint)
+                }
 
-                    Spacer()
-
-                    Menu {
-                        ForEach(Aggregation.allCases) { option in
-                            Button {
-                                setAggregation(option, for: entry.tile)
-                            } label: {
-                                HStack {
-                                    Text(option.label)
-                                    if entry.resolvedAggregation == option {
-                                        Spacer()
-                                        Image(systemName: "checkmark")
-                                    }
-                                }
-                            }
-                        }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text(entry.resolvedAggregation.label)
-                            Image(systemName: "chevron.up.chevron.down")
-                                .font(.caption2.weight(.semibold))
-                        }
-                        .font(.caption)
-                    }
-                    .accessibilityLabel("\(entry.tile.editorTitle) weekly value")
-                    .accessibilityValue(entry.resolvedAggregation.label)
+                // A count of workouts off cadence has no average, so the
+                // control only appears where both readings mean something.
+                if entry.tile.supportsAggregation {
+                    aggregationControl(for: entry)
                 }
             }
         }
     }
 
-    // MARK: - Mutation
+    private func aggregationControl(for entry: DrawerLayout.Entry) -> some View {
+        HStack {
+            Text("This week")
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
-    private func move(from source: IndexSet, to destination: Int) {
-        layout.entries.move(fromOffsets: source, toOffset: destination)
+            Spacer()
+
+            Menu {
+                ForEach(Aggregation.allCases) { option in
+                    Button {
+                        setAggregation(option, for: entry.tile)
+                    } label: {
+                        HStack {
+                            Text(option.label)
+                            if entry.resolvedAggregation == option {
+                                Spacer()
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(entry.resolvedAggregation.label)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption2.weight(.semibold))
+                }
+                .font(.caption)
+            }
+            .accessibilityLabel("\(entry.tile.editorTitle) weekly value")
+            .accessibilityValue(entry.resolvedAggregation.label)
+        }
     }
 
-    private func remove(at offsets: IndexSet) {
-        layout.entries.remove(atOffsets: offsets)
+    // MARK: - Mutation
+
+    /// The same spring the workout list animates with, so the two feel related.
+    private static let shuffle = Animation.spring(response: 0.35, dampingFraction: 0.8)
+
+    private func move(from source: IndexSet, to destination: Int) {
+        withAnimation(Self.shuffle) {
+            layout.entries.move(fromOffsets: source, toOffset: destination)
+        }
+    }
+
+    private func remove(_ tile: DrawerTile) {
+        withAnimation(Self.shuffle) {
+            layout.entries.removeAll { $0.tile == tile }
+        }
     }
 
     private func add(_ tile: DrawerTile) {
-        withAnimation {
+        withAnimation(Self.shuffle) {
             layout.entries.append(.init(tile: tile))
         }
     }

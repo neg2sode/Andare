@@ -101,9 +101,9 @@ struct WorkoutSummaryView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 25) {
                 cadenceHeroSection
-                summaryStatsSectionGrid
-                chartSection
                 mapSection
+                chartSection
+                summaryStatsSectionGrid
                 debugLogSection
             }
             .padding()
@@ -237,27 +237,42 @@ struct WorkoutSummaryView: View {
         }
     }
     
+    /// Six stats sharing one card. They used to be six separate cards, which
+    /// drew five seams between numbers that belong to the same workout; the
+    /// grid's own spacing separates them now.
     private var summaryStatsSectionGrid: some View {
         let speedLabel = data.workoutType == .cycling ? "Avg. Speed" : "Avg. Pace"
         let columns = [
-            GridItem(.flexible(), spacing: 12),
-            GridItem(.flexible(), spacing: 12)
+            GridItem(.flexible(), spacing: 24),
+            GridItem(.flexible(), spacing: 24)
         ]
 
         return VStack(alignment: .leading, spacing: 12) {
-            Text("Workout Summary")
+            Text("Workout Details")
                 .font(.title2)
                 .fontWeight(.bold)
 
-            LazyVGrid(columns: columns, spacing: 12) {
-                SummaryStatCard(label: "Duration", stats: formatter.formatDuration(data.duration))
-                SummaryStatCard(label: "Distance", stats: formatter.formatDistance(data.totalDistance))
-                SummaryStatCard(label: speedLabel, stats: formatter.formatSpeedOrPace(data.averageSpeed, workoutType: data.workoutType))
-                SummaryStatCard(label: "Elevation Gain", stats: formatter.formatElevation(data.elevationGain))
-                SummaryStatCard(label: "Active Calories", stats: formatter.formatEnergyBurned(data.activeCalories))
-                SummaryStatCard(label: "Total Calories", stats: formatter.formatEnergyBurned(data.totalCalories))
+            LazyVGrid(columns: columns, spacing: 24) {
+                stat("Duration", formatter.formatDuration(data.duration))
+                stat("Distance", formatter.formatDistance(data.totalDistance))
+                stat(speedLabel, formatter.formatSpeedOrPace(data.averageSpeed, workoutType: data.workoutType))
+                stat("Elevation Gain", formatter.formatElevation(data.elevationGain))
+                stat("Active Calories", formatter.formatEnergyBurned(data.activeCalories))
+                stat("Total Calories", formatter.formatEnergyBurned(data.totalCalories))
             }
+            .padding(20)
+            .cardStyle()
         }
+    }
+
+    private func stat(_ label: String, _ stats: FormattedStats) -> some View {
+        SummaryStatContent(
+            label: label,
+            value: stats.value,
+            unit: stats.unit,
+            unitColour: stats.colour,
+            size: .roomy
+        )
     }
     
     // 2. Chart Section
@@ -267,6 +282,19 @@ struct WorkoutSummaryView: View {
                 .font(.title2)
                 .fontWeight(.bold)
 
+            chartCard
+                .padding(20)
+                .cardStyle()
+        }
+    }
+
+    private var xAxisValues: [TimeInterval] {
+        CadenceChartAxis.gridValues(forDuration: data.duration)
+    }
+
+    @ViewBuilder
+    private var chartCard: some View {
+        Group {
             if data.cadenceSegments.isEmpty {
                 Text("No cadence data recorded.")
                     .foregroundStyle(.secondary)
@@ -294,7 +322,9 @@ struct WorkoutSummaryView: View {
                  }
                 .chartYScale(domain: 0...data.workoutType.cadenceInfo.range.max)
                 .chartXAxis {
-                    AxisMarks(preset: .automatic, values: .automatic(desiredCount: 5)) { value in
+                    // Marks land on analysis boundaries rather than round clock
+                    // times — see `xAxisStride`.
+                    AxisMarks(values: xAxisValues) { value in
                         AxisGridLine()
                         AxisTick()
                         AxisValueLabel {
@@ -303,14 +333,24 @@ struct WorkoutSummaryView: View {
                                 let seconds = Int(time) % 60
                                 Text("\(minutes):\(String(format: "%02d", seconds))")
                                     .font(.caption)
+                                    // Charts sizes a custom label to the space
+                                    // it thinks is free, which truncates the
+                                    // last one to "5…".
+                                    .fixedSize()
                             }
                         }
                     }
                 }
                 .chartYAxis {
-                    AxisMarks(preset: .automatic, values: .automatic(desiredCount: 5)) { value in
+                    // Two horizontal lines: the baseline and the top of the
+                    // range. Five evenly spaced ones told the reader nothing
+                    // the bar heights weren't already showing.
+                    //
+                    // Leading, because trailing labels occupy the right edge
+                    // and clip the final time label to "5…".
+                    AxisMarks(position: .leading,
+                              values: [0, data.workoutType.cadenceInfo.range.max]) { _ in
                         AxisGridLine()
-                        AxisTick()
                         AxisValueLabel()
                     }
                 }
@@ -319,40 +359,36 @@ struct WorkoutSummaryView: View {
                 .accessibilityLabel("Cadence over time chart showing \(data.cadenceSegments.count) data points, average \(Int(data.averageCadence)) \(data.workoutType.cadenceInfo.unit)")
             }
         }
-        .padding(20)
-        .cardStyle(radius: 20)
     }
-    
+
     private var mapSection: some View {
         VStack(alignment: .leading) {
             switch data.mapDisplayContext {
             case .full:
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Route Map")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    if let polyline = self.routePolyline,
-                       let startCoord = self.coordinates.first,
-                       let endCoord = self.coordinates.last {
-                        Map(initialPosition: mapCameraPosition, interactionModes: []) {
-                            Self.routeMapContent(polyline: polyline, start: startCoord, end: endCoord)
-                        }
-                        .mapControlVisibility(.hidden) // Keep inline map clean
-                        .frame(height: 200)
-                        .cornerRadius(10)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            isShowingFullMap = true
-                        }
-                    } else {
-                        Text("No route data recorded.")
-                            .foregroundStyle(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                // The map is its own picture and needs no card or title around
+                // it — a background behind a photograph is just a border.
+                if let polyline = self.routePolyline,
+                   let startCoord = self.coordinates.first,
+                   let endCoord = self.coordinates.last {
+                    Map(initialPosition: mapCameraPosition, interactionModes: []) {
+                        Self.routeMapContent(polyline: polyline, start: startCoord, end: endCoord)
                     }
+                    .mapControlVisibility(.hidden) // Keep inline map clean
+                    .frame(height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        isShowingFullMap = true
+                    }
+                    .accessibilityLabel("Route map")
+                    .accessibilityHint("Opens the full map")
+                } else {
+                    Text("No route data recorded.")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(20)
+                        .cardStyle()
                 }
-                .padding(20)
-                .cardStyle(radius: 20)
 
             case .prompt:
                 // Message for reduced accuracy (existing code)
@@ -363,7 +399,7 @@ struct WorkoutSummaryView: View {
                     .padding(.vertical, 12)
                     .padding(.horizontal)
                     .background(Color.orange.opacity(0.1))
-                    .cornerRadius(16)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
             
             case .hidden:
                 EmptyView()

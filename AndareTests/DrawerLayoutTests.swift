@@ -70,13 +70,71 @@ struct DrawerLayoutTests {
         UserDefaults(suiteName: name)!
     }
 
-    @Test func migrationSeedsTheDefaultLayoutWhenNothingWasHidden() {
+    private func storedLayout(_ defaults: UserDefaults) -> DrawerLayout? {
+        DrawerLayout(rawValue: defaults.string(forKey: DrawerLayoutMigration.storageKey) ?? "")
+    }
+
+    @Test func aFreshInstallGetsTheWholeCatalog() {
         let defaults = scratchDefaults()
         DrawerLayoutMigration.runIfNeeded(defaults)
 
-        let raw = defaults.string(forKey: DrawerLayoutMigration.storageKey)
-        let layout = DrawerLayout(rawValue: raw ?? "")
-        #expect(layout?.entries.map(\.tile) == [.daylight, .steps, .cadence])
+        #expect(storedLayout(defaults) == DrawerLayout.default)
+        #expect(storedLayout(defaults)?.entries.count == DrawerTile.allCases.count)
+    }
+
+    /// Widening the default cannot reach a device that already stored a layout,
+    /// so an untouched one is upgraded in place.
+    @Test func anUntouchedOldDefaultIsWidened() {
+        let defaults = scratchDefaults()
+        let oldDefault = DrawerLayout(entries: [.daylight, .steps, .cadence].map { .init(tile: $0) })
+        defaults.set(oldDefault.rawValue, forKey: DrawerLayoutMigration.storageKey)
+        defaults.set(1, forKey: DrawerLayoutMigration.versionKey)
+
+        DrawerLayoutMigration.runIfNeeded(defaults)
+
+        #expect(storedLayout(defaults) == DrawerLayout.default)
+    }
+
+    /// The regression that matters: an arrangement the user actually made is
+    /// theirs, even though it is now smaller than the default.
+    @Test func aDeliberateArrangementIsNotWidened() {
+        let defaults = scratchDefaults()
+        let arranged = DrawerLayout(entries: [.init(tile: .cadence), .init(tile: .daylight)])
+        defaults.set(arranged.rawValue, forKey: DrawerLayoutMigration.storageKey)
+        defaults.set(1, forKey: DrawerLayoutMigration.versionKey)
+
+        DrawerLayoutMigration.runIfNeeded(defaults)
+
+        #expect(storedLayout(defaults) == arranged)
+    }
+
+    /// Same three tiles, but the user picked a non-default aggregation — that
+    /// is a touched layout too.
+    @Test func anOldDefaultWithACustomAggregationIsNotWidened() {
+        let defaults = scratchDefaults()
+        let tweaked = DrawerLayout(entries: [
+            .init(tile: .daylight, aggregation: .total),
+            .init(tile: .steps),
+            .init(tile: .cadence)
+        ])
+        defaults.set(tweaked.rawValue, forKey: DrawerLayoutMigration.storageKey)
+        defaults.set(1, forKey: DrawerLayoutMigration.versionKey)
+
+        DrawerLayoutMigration.runIfNeeded(defaults)
+
+        #expect(storedLayout(defaults) == tweaked)
+    }
+
+    /// Widening happens once. Removing tiles afterwards must stick.
+    @Test func wideningDoesNotRepeatOnceStamped() {
+        let defaults = scratchDefaults()
+        DrawerLayoutMigration.runIfNeeded(defaults)
+
+        let trimmed = DrawerLayout(entries: [.init(tile: .steps)])
+        defaults.set(trimmed.rawValue, forKey: DrawerLayoutMigration.storageKey)
+        DrawerLayoutMigration.runIfNeeded(defaults)
+
+        #expect(storedLayout(defaults) == trimmed)
     }
 
     /// Someone who hid the Today card must not have it come back as two tiles.

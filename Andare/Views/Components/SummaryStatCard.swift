@@ -7,8 +7,75 @@
 
 import SwiftUI
 
-/// Individual stat card: caption label above a big rounded value with a tinted unit.
-/// Used by the workout summary grid; drawer HealthKit cards adopt it in Phase 6.
+/// How much room a stat gets. Drawer tiles are their own small cards and stay
+/// compact; the summary screen groups several into one large card and can
+/// afford bigger type.
+enum SummaryStatSize {
+    case compact
+    case roomy
+
+    var valueSize: CGFloat {
+        switch self {
+        case .compact: 28
+        case .roomy: 32
+        }
+    }
+
+    var labelFont: Font {
+        switch self {
+        case .compact: .caption
+        case .roomy: .subheadline
+        }
+    }
+}
+
+/// Caption label above a big rounded value with a tinted unit, without any
+/// container of its own — for callers that supply one shared background.
+struct SummaryStatContent: View {
+    let label: String
+    let value: String
+    let unit: String
+    let unitColour: Color
+    var icon: String? = nil
+    var iconTint: Color = .secondary
+    var size: SummaryStatSize = .compact
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                if let icon {
+                    Image(systemName: icon)
+                        .font(.body)
+                        .foregroundStyle(iconTint)
+                }
+
+                Text(label)
+                    .font(size.labelFont)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text(value)
+                    .font(.system(size: size.valueSize, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+
+                if !unit.isEmpty {
+                    Text(unit)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(unitColour)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(label): \(value) \(unit)")
+    }
+}
+
+/// A `SummaryStatContent` in its own card. Used by the drawer's tile grid.
 struct SummaryStatCard: View {
     let label: String
     let value: String
@@ -31,38 +98,15 @@ struct SummaryStatCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                if let icon {
-                    Image(systemName: icon)
-                        .font(.body)
-                        .foregroundStyle(iconTint)
-                }
-
-                Text(label)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-
-            HStack(alignment: .lastTextBaseline, spacing: 2) {
-                Text(value)
-                    .font(.system(size: 28, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-
-                if !unit.isEmpty {
-                    Text(unit)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(unitColour)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        SummaryStatContent(
+            label: label,
+            value: value,
+            unit: unit,
+            unitColour: unitColour,
+            icon: icon,
+            iconTint: iconTint
+        )
         .padding()
         .cardStyle()
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(label): \(value) \(unit)")
     }
 }

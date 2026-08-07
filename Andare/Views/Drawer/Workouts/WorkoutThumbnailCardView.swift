@@ -42,9 +42,7 @@ struct WorkoutThumbnailCardView: View {
                 }
             }
             .padding()
-            .cardStyle(radius: 12)
-            .shadow(color: .black.opacity(0.08), radius: 1, y: 1)
-            .shadow(color: .black.opacity(0.1), radius: 4, y: 0)
+            .cardStyle()
         }
         .buttonStyle(CardPressStyle())
         .accessibilityElement(children: .ignore)

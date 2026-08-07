@@ -12,55 +12,60 @@ import XCTest
 final class DrawerCustomizationTests: XCTestCase {
 
     @MainActor
-    func testLongPressOpensEditorAndAddingATileShowsItInTheDrawer() throws {
-        let app = XCUIApplication()
-        // Each test starts from the default layout; without this, whichever
-        // test ran first would decide what the next one sees.
-        app.launchArguments = ["-resetDrawerLayout"]
-        app.launch()
-        sleep(2)
+    func testRemovingATileTakesItOutOfTheDrawerAndAddingPutsItBack() throws {
+        let app = launch()
         expandDrawer(app)
 
+        // The default layout is the whole catalog.
         XCTAssertTrue(app.staticTexts["Time in Daylight"].waitForExistence(timeout: 5),
                       "default layout should include the daylight tile")
-        XCTAssertFalse(app.staticTexts["Walking Distance"].exists,
-                       "walking distance is not in the default layout")
+        XCTAssertTrue(app.staticTexts["Walking Distance"].exists,
+                      "default layout should include every tile")
         attach(app, "1-default-layout")
 
-        app.staticTexts["Time in Daylight"].press(forDuration: 0.8)
-        sleep(2)
-
-        XCTAssertTrue(app.navigationBars["Customize"].waitForExistence(timeout: 5),
-                      "long press did not open the editor")
+        openEditor(app)
         attach(app, "2-editor")
 
-        app.buttons["Add Walking Distance"].firstMatch.tap()
+        // One tap removes — no swipe, no confirming second tap.
+        app.buttons["Remove Walking Distance"].firstMatch.tap()
         sleep(1)
-        attach(app, "3-tile-added")
+        XCTAssertFalse(app.buttons["Remove Walking Distance"].exists,
+                       "the row should be gone after a single tap")
+        attach(app, "3-tile-removed")
 
+        dismissEditor(app)
+        sleep(2)
+        XCTAssertFalse(app.staticTexts["Walking Distance"].exists,
+                       "the removed tile is still in the drawer")
+        attach(app, "4-drawer-without-tile")
+
+        // And it comes back.
+        openEditor(app)
+        let addButton = app.buttons["Add Walking Distance"].firstMatch
+        var attempts = 0
+        while !addButton.isHittable && attempts < 6 {
+            app.swipeUp()
+            attempts += 1
+        }
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5),
+                      "a removed tile should be offered under More Tiles")
+        addButton.tap()
+        sleep(1)
         dismissEditor(app)
         sleep(2)
 
         XCTAssertTrue(app.staticTexts["Walking Distance"].waitForExistence(timeout: 5),
-                      "the added tile did not appear in the drawer")
-        attach(app, "4-drawer-with-new-tile")
+                      "the re-added tile did not come back")
+        attach(app, "5-tile-restored")
     }
 
     /// The aggregation control is per tile, and only where both readings mean
     /// something — a count of workouts off cadence has no average.
     @MainActor
     func testAggregationControlAppearsOnlyWhereItApplies() throws {
-        let app = XCUIApplication()
-        // Each test starts from the default layout; without this, whichever
-        // test ran first would decide what the next one sees.
-        app.launchArguments = ["-resetDrawerLayout"]
-        app.launch()
-        sleep(2)
+        let app = launch()
         expandDrawer(app)
-
-        app.staticTexts["Time in Daylight"].press(forDuration: 0.8)
-        sleep(2)
-        XCTAssertTrue(app.navigationBars["Customize"].waitForExistence(timeout: 5))
+        openEditor(app)
 
         XCTAssertTrue(app.buttons["Time in Daylight weekly value"].exists,
                       "daylight should offer average or total")
@@ -92,6 +97,17 @@ final class DrawerCustomizationTests: XCTestCase {
 
     // MARK: - Helpers
 
+    /// Each test starts from the default layout; without this, whichever test
+    /// ran first would decide what the next one sees.
+    @MainActor
+    private func launch() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-resetDrawerLayout"]
+        app.launch()
+        sleep(2)
+        return app
+    }
+
     @MainActor
     private func expandDrawer(_ app: XCUIApplication) {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.93))
@@ -100,17 +116,25 @@ final class DrawerCustomizationTests: XCTestCase {
         sleep(2)
     }
 
-    /// iOS 26 labels the role-based close button "Close"; older versions "Done".
+    @MainActor
+    private func openEditor(_ app: XCUIApplication) {
+        app.staticTexts["Time in Daylight"].press(forDuration: 0.8)
+        sleep(2)
+        XCTAssertTrue(app.navigationBars["Customize"].waitForExistence(timeout: 5),
+                      "long press did not open the editor")
+    }
+
+    /// iOS 26 shows a prominent checkmark; older versions a plain "Done".
     @MainActor
     private func dismissEditor(_ app: XCUIApplication) {
-        for label in ["Close", "Done"] {
+        for label in ["Done", "Close"] {
             let button = app.navigationBars["Customize"].buttons[label]
             if button.exists && button.isHittable {
                 button.tap()
                 return
             }
         }
-        XCTFail("no Close or Done button to dismiss the editor")
+        XCTFail("no Done button to dismiss the editor")
     }
 
     @MainActor

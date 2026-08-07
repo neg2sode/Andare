@@ -28,7 +28,7 @@ struct AndareApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            RootView()
         }
         .modelContainer(for: [WorkoutDataModel.self, CadenceSegmentModel.self])
         .onChange(of: scenePhase) {

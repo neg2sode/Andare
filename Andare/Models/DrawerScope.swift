@@ -62,7 +62,11 @@ enum DrawerScope: String, CaseIterable, Identifiable {
     func title(for date: Date = Date(), calendar: Calendar = .current) -> String {
         switch self {
         case .today:
-            return date.formatted(.dateTime.weekday(.wide).month(.abbreviated).day())
+            // Composed rather than one format string so the "·" matches the
+            // week title. Both halves stay locale-ordered.
+            let weekday = date.formatted(.dateTime.weekday(.wide))
+            let day = date.formatted(.dateTime.month(.abbreviated).day())
+            return "\(weekday) · \(day)"
 
         case .week:
             let start = interval(containing: date, calendar: calendar).start

@@ -21,7 +21,7 @@ struct GuideCardScaffold<Content: View, Footer: View>: View {
 
                     content
                         .padding(30)
-                        .cardStyle(radius: 20)
+                        .cardStyle()
                         .frame(maxWidth: 800)
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal, 20)

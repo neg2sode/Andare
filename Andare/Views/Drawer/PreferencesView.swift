@@ -86,10 +86,10 @@ struct PreferencesView: View {
             
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    drawerSection
+                    unitsSection
                     permissionsSection
                     profileSection
-                    unitsSection
-                    drawerSection
                     notificationSection
                 }
                 .padding(.vertical)
@@ -170,7 +170,7 @@ struct PreferencesView: View {
                 }
             }
             .buttonStyle(.plain) // Apply to all buttons within
-            .cardStyle(radius: 12)
+            .cardStyle()
             .padding(.horizontal)
         }
     }
@@ -203,7 +203,7 @@ struct PreferencesView: View {
                     focusedField: $focusedField
                 )
             }
-            .cardStyle(radius: 12)
+            .cardStyle()
             .padding(.horizontal)
         }
     }
@@ -285,7 +285,7 @@ struct PreferencesView: View {
                 }
                 .tint(.primary)
             }
-            .cardStyle(radius: 12)
+            .cardStyle()
             .padding(.horizontal)
         }
     }
@@ -312,7 +312,7 @@ struct PreferencesView: View {
                 }
                 .tint(.primary)
             }
-            .cardStyle(radius: 12)
+            .cardStyle()
             .padding(.horizontal)
         }
     }
@@ -352,7 +352,7 @@ struct PreferencesView: View {
                     .padding(.vertical, 13)
                 }
             }
-            .cardStyle(radius: 12).padding(.horizontal)
+            .cardStyle().padding(.horizontal)
             .animation(.easeInOut(duration: 0.2), value: realTimeAlertsEnabled)
         }
     }
@@ -499,23 +499,17 @@ struct PreferencesView: View {
         }
     }
 
+    /// Only the state the user can act on says anything. A row showing a green
+    /// check has nothing to tell them, so tapping it does nothing.
     private func handleHealthDataRowTap() {
         switch healthDataAccess {
-        case .unavailable:
-            alertManager.showAlert(
-                title: "Health Data",
-                message: "Health data isn't available on this device."
-            )
+        case .unavailable, .readable:
+            break
         case .notRequested:
             Task {
                 await healthKitManager.requestTodayAuthorisation()
                 healthDataAccess = await healthKitManager.todayDataAccess()
             }
-        case .readable:
-            alertManager.showAlert(
-                title: "Health Data",
-                message: "Andare reads Time in Daylight and Steps to fill in the Today cards. It only reads them — nothing is written back, and the data never leaves your device."
-            )
         case .unreadable:
             alertManager.showAlert(
                 title: "No Health Data Coming Through",

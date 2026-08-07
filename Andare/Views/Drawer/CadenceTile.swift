@@ -122,7 +122,7 @@ struct CadenceTile: View {
         .padding()
         .frame(maxWidth: .infinity)
         .background(verdict.colour.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Cadence: \(verdict.title). \(verdict.detail)")
     }

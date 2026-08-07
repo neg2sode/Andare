@@ -104,7 +104,8 @@ struct DrawerScopeTests {
         #expect(DrawerScope.week.title(for: friday, calendar: calendar)
                 != DrawerScope.week.title(for: monday, calendar: calendar))
 
-        #expect(!DrawerScope.today.title(for: friday, calendar: calendar).isEmpty)
+        // Both scopes separate their label from the date the same way.
+        #expect(DrawerScope.today.title(for: friday, calendar: calendar).contains(" · "))
         #expect(!DrawerScope.today.title(for: friday, calendar: calendar).contains("This Week"))
     }
 }
