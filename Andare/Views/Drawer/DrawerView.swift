@@ -9,26 +9,26 @@ import SwiftUI
 
 struct DrawerView: View {
     @State private var isShowingPreferences = false
-    @State private var workoutsExpanded = false
     @State private var gearIsRotating = false
-    
-    @ObservedObject private var alertManager = AlertManager.shared
 
-    // Long-press hides either informational card; Preferences brings it back.
-    @AppStorage(DrawerCard.today.storageKey) private var showToday = true
-    @AppStorage(DrawerCard.cadenceSummary.storageKey) private var showCadenceSummary = true
+    /// The window every section below describes. Deliberately not persisted —
+    /// the drawer is a "what's happening now" surface, and coming back to a
+    /// week view days later would be a confusing thing to land on.
+    @State private var scope: DrawerScope = .today
+
+    @ObservedObject private var alertManager = AlertManager.shared
 
     @Binding var drawerDetent: PresentationDetent
     @EnvironmentObject var pagingState: WorkoutPagingState
+
+    private var isExpanded: Bool { drawerDetent == .large }
 
     var body: some View {
         VStack(spacing: 0) {
             // MARK: - Drawer Header
             HStack {
-                Text("Andare")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                
+                scopeTitle
+
                 Spacer()
                 
                 Button(action: { isShowingPreferences = true }) {
@@ -55,26 +55,22 @@ struct DrawerView: View {
             // MARK: - Scrollable Content
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    if showToday {
-                        TodaySection()
-                            .hideOnLongPress { hide(.today) }
-                    }
-                    if showCadenceSummary {
-                        CadenceSummarySection()
-                            .hideOnLongPress { hide(.cadenceSummary) }
-                    }
-                    RecentWorkoutsView(isExpanded: $workoutsExpanded)
+                    DrawerTileGrid(scope: scope)
+                    RecentWorkoutsView(scope: scope)
                     ArticlesView()
                     ContactMeView()
                 }
             }
             .onChange(of: drawerDetent) { _, newDetent in
+                // The drawer already forgets its state when it closes; scope
+                // follows the same rule, so the collapsed bar over the home
+                // screen always reads as today's date.
                 guard newDetent != .large else { return }
                 withAnimation(.easeInOut(duration: 0.3)) {
-                    workoutsExpanded = false
+                    scope = .today
                 }
             }
-            
+
             // MARK: - Footnote
             if drawerDetent == .large {
                 Text("Made with ☕️ by neg2sode")
@@ -111,30 +107,54 @@ struct DrawerView: View {
         }
     }
 
-    /// Hides a card and says where to get it back, since a long press that
-    /// makes something disappear is otherwise a one-way door.
-    private func hide(_ card: DrawerCard) {
-        withAnimation(.easeInOut(duration: 0.25)) {
-            switch card {
-            case .today: showToday = false
-            case .cadenceSummary: showCadenceSummary = false
+    /// The drawer title doubles as the scope control — but only once the drawer
+    /// is open. Collapsed, this bar is 100pt tall and is what the user taps and
+    /// drags to expand; a `Menu` there would swallow that tap, and nothing it
+    /// changed would be on screen to see.
+    @ViewBuilder
+    private var scopeTitle: some View {
+        if isExpanded {
+            Menu {
+                ForEach(DrawerScope.allCases) { option in
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.25)) { scope = option }
+                    } label: {
+                        HStack {
+                            Text(option.menuLabel)
+                            if scope == option {
+                                Spacer()
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    titleText
+
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .layoutPriority(1)
+                }
             }
+            .tint(.primary)
+            .accessibilityLabel("Time period")
+            .accessibilityValue(scope.menuLabel)
+            .accessibilityHint("Changes the period the drawer describes")
+        } else {
+            titleText
         }
-
-        // VibrationManager owns the CoreHaptics workout patterns; a plain UI
-        // confirmation is what the standard generator is for.
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-        alertManager.showAlert(
-            title: "\(card.title) Hidden",
-            message: "You can show it again in Preferences, under Drawer."
-        )
     }
-}
 
-private extension View {
-    /// Long press to hide, with the press target covering the whole card.
-    func hideOnLongPress(perform action: @escaping () -> Void) -> some View {
-        self.contentShape(Rectangle())
-            .onLongPressGesture(minimumDuration: 0.5, perform: action)
+    /// A week title carries a date range, which is long enough to wrap onto a
+    /// second line and drag the chevron out of alignment. Scaling down beats
+    /// wrapping for a header that has to share its row with two controls.
+    private var titleText: some View {
+        Text(scope.title())
+            .font(.largeTitle)
+            .fontWeight(.bold)
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
     }
 }

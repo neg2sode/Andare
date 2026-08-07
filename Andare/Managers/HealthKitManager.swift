@@ -35,13 +35,20 @@ final class HealthKitManager: ObservableObject {
         HKQuantityType(.bodyMass),
         HKQuantityType(.height),
         HKQuantityType(.timeInDaylight),
-        HKQuantityType(.stepCount)
+        HKQuantityType(.stepCount),
+        HKQuantityType(.distanceWalkingRunning)
     ]
 
-    // Read-only types backing the drawer's Today cards.
+    // Read-only types backing the drawer's tile grid.
+    //
+    // Adding a type here makes `statusForAuthorizationRequest` report
+    // `.shouldRequest` again for users who already granted the others, so the
+    // grid re-offers "Allow Health Access". That is correct for a genuinely new
+    // read type, but it looks like a regression if you are not expecting it.
     private let todayReadTypes: Set<HKObjectType> = [
         HKQuantityType(.timeInDaylight),
-        HKQuantityType(.stepCount)
+        HKQuantityType(.stepCount),
+        HKQuantityType(.distanceWalkingRunning)
     ]
     
     init() {
@@ -117,11 +124,21 @@ final class HealthKitManager: ObservableObject {
         await sum(identifier, unit: unit, since: Calendar.current.startOfDay(for: Date()))
     }
 
+    /// Cumulative sum for a quantity type over an explicit window, so the drawer
+    /// can ask for a calendar week as easily as for today.
+    func sum(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, over interval: DateInterval) async -> Double? {
+        await sum(identifier, unit: unit, from: interval.start, to: interval.end)
+    }
+
     /// Cumulative sum for a quantity type from `start` until now. Read-only.
     private func sum(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, since start: Date) async -> Double? {
+        await sum(identifier, unit: unit, from: start, to: Date())
+    }
+
+    private func sum(_ identifier: HKQuantityTypeIdentifier, unit: HKUnit, from start: Date, to end: Date) async -> Double? {
         guard HKHealthStore.isHealthDataAvailable() else { return nil }
         let quantityType = HKQuantityType(identifier)
-        let predicate = HKQuery.predicateForSamples(withStart: start, end: Date(), options: .strictStartDate)
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate)
 
         return await withCheckedContinuation { continuation in
             let query = HKStatisticsQuery(quantityType: quantityType, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, statistics, _ in

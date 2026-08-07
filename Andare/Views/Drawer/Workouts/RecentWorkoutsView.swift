@@ -22,70 +22,26 @@ struct RecentWorkoutsView: View {
     @State private var workoutToDelete: WorkoutDataModel?
     @State private var isShowingDeleteConfirm = false
     
-    @Binding var isExpanded: Bool
+    /// The window to show, chosen from the drawer title. This used to be decided
+    /// here — the header rewrote itself between "Today's", "Recent" and "This
+    /// Week's" depending on how many workouts existed, so the section silently
+    /// disagreed with the rest of the drawer about what period it covered.
+    let scope: DrawerScope
+
     private let rowHeight: CGFloat = 92
-    
-    private var workoutsInLastWeek: [WorkoutDataModel] {
-        let calendar = Calendar.current
-        let startOfToday = calendar.startOfDay(for: Date())
-        let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: startOfToday)!
 
-        return workouts.filter {
-            $0.startTime >= sevenDaysAgo
-        }
-    }
-    
-    private var todaysWorkouts: [WorkoutDataModel] {
-        let calendar = Calendar.current
-        let startOfToday = calendar.startOfDay(for: Date())
-        let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: startOfToday)!
-
-        return workouts.filter {
-            $0.startTime >= startOfToday && $0.startTime < startOfTomorrow
-        }
-    }
-    
-    private var collapsedWorkouts: [WorkoutDataModel] {
-        if todaysWorkouts.count >= 3 {
-            return todaysWorkouts
-        } else {
-            return Array(workoutsInLastWeek.prefix(3))
-        }
-    }
-    
-    private var fullWorkouts: [WorkoutDataModel] {
-        // always expand into the past‑week set
-        workoutsInLastWeek
-    }
-    
     private var workoutsToShow: [WorkoutDataModel] {
-        isExpanded ? fullWorkouts : collapsedWorkouts
-    }
-    
-    private var shouldShowMoreButton: Bool {
-        !isExpanded && collapsedWorkouts.count < fullWorkouts.count
-    }
-    
-    private var workoutsHeaderTitle: String {
-        if isExpanded {
-            return "This Week's Workouts"
-        } else {
-            // collapsed
-            if todaysWorkouts.count >= 3 {
-                return "Today's Workouts"
-            } else {
-                return "Recent Workouts"
-            }
-        }
+        let interval = scope.interval()
+        return workouts.filter { interval.contains($0.startTime) }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(workoutsHeaderTitle)
+            Text("Workouts")
                 .font(.title2)
                 .fontWeight(.bold)
-            
-            if workoutsInLastWeek.isEmpty {
+
+            if workoutsToShow.isEmpty {
                 emptyStateView
             } else {
                 workoutListView
@@ -112,9 +68,12 @@ struct RecentWorkoutsView: View {
     }
     
     private var emptyStateView: some View {
-        ContentUnavailableView("No Workouts Yet This Week", systemImage: "figure.run.circle")
-            .padding(.vertical)
-            .transition(.opacity)
+        ContentUnavailableView(
+            scope == .today ? "No Workouts Yet Today" : "No Workouts Yet This Week",
+            systemImage: "figure.run.circle"
+        )
+        .padding(.vertical)
+        .transition(.opacity)
     }
     
     private var workoutListView: some View {
@@ -155,17 +114,6 @@ struct RecentWorkoutsView: View {
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: workoutsToShow)
             .frame(height: rowHeight * CGFloat(workoutsToShow.count))
             .scrollDisabled(true)
-            
-            if shouldShowMoreButton {
-                Button("Show More") {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        isExpanded = true
-                    }
-                }
-                .fontWeight(.semibold)
-                .contentShape(Rectangle())
-                .transition(.opacity.combined(with: .scale(scale: 0.95)))
-            }
         }
     }
     
