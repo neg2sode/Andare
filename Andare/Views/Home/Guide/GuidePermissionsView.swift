@@ -56,8 +56,12 @@ struct GuidePermissionsView: View {
                 nextHint
 
                 VStack(spacing: 24) {
-                    Button("Let's Go", action: continueAction)
-                        .buttonStyle(PrimaryButtonStyle(radius: 30))
+                    Button(action: continueAction) {
+                        Text("Let's Go")
+                            .font(.headline).fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                    }
+                        .primaryActionStyle()
                         .disabled(!allPermissionsGranted)
                         .opacity(allPermissionsGranted ? 1.0 : 0.5)
                         .animation(.easeInOut(duration: 0.2), value: allPermissionsGranted)

@@ -127,8 +127,12 @@ struct WorkoutSummaryView: View {
         VStack {
             Spacer()
             if isDoneButtonVisible {
-                Button("Done") { dismiss() }
-                .buttonStyle(PrimaryButtonStyle())
+                Button { dismiss() } label: {
+                    Text("Done")
+                        .font(.headline).fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                }
+                .primaryActionStyle()
                 .padding(.horizontal, 30)
                 .padding(.bottom)
                 .shadow(radius: 5)

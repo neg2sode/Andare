@@ -16,7 +16,7 @@ struct ArticleThumbnailCardView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fill) // Fill the frame
                 // Define a fixed height or aspect ratio for the image area
-                .frame(height: 200)
+                .frame(height: 275, alignment: .top)
                 .clipped() // Prevent image from spilling out
                 // Decorative: without this VoiceOver reads the asset name.
                 .accessibilityHidden(true)

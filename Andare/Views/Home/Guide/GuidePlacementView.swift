@@ -80,8 +80,12 @@ struct GuidePlacementView: View {
             }
         } footer: {
             VStack(spacing: 24) {
-                Button("Continue", action: continueAction)
-                    .buttonStyle(PrimaryButtonStyle(radius: 30))
+                Button(action: continueAction) {
+                    Text("Continue")
+                        .font(.headline).fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                }
+                .primaryActionStyle()
 
                 Button("I'm Not Ready", action: cancelAction)
                     .font(.headline).fontWeight(.semibold)

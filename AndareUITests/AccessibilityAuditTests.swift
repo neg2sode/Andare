@@ -37,7 +37,11 @@ final class AccessibilityAuditTests: XCTestCase {
             card.tap()
             sleep(2)
             try auditing(app, "article")
-            app.buttons["Done"].firstMatch.tap()
+            // iOS 26 uses a role-based Close button here; older versions "Done".
+            for label in ["Close", "Done"] where app.buttons[label].firstMatch.isHittable {
+                app.buttons[label].firstMatch.tap()
+                break
+            }
             sleep(2)
         }
 

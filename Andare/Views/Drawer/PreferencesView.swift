@@ -25,6 +25,8 @@ struct PreferencesView: View {
     @AppStorage("unitSystemPreference") private var unitSystem: UnitSystem = .systemDefault
     @AppStorage("userWeightKg") private var userWeightKg: Double = 70.0
     @AppStorage("userHeightCm") private var userHeightCm: Double = 170.0
+    @AppStorage(DrawerCard.today.storageKey) private var showToday: Bool = true
+    @AppStorage(DrawerCard.cadenceSummary.storageKey) private var showCadenceSummary: Bool = true
 
     @State private var showingLocationWarningDetail = false
     @State private var profileSync: ProfileSyncState = .checking
@@ -61,11 +63,23 @@ struct PreferencesView: View {
                 
                 Spacer()
                 
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Done")
-                        .foregroundStyle(Color.accent)
+                if #available(iOS 26.0, *) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "checkmark")
+                            .font(.title2)
+                            .frame(maxWidth: 20, maxHeight: 30)
+                    }
+                    .buttonStyle(.glassProminent)
+                    .accessibilityLabel("Done")
+                } else {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("Done")
+                            .foregroundStyle(Color.accent)
+                    }
                 }
             }
             .padding(.top, 20)
@@ -77,6 +91,7 @@ struct PreferencesView: View {
                     permissionsSection
                     profileSection
                     unitsSection
+                    drawerSection
                     notificationSection
                 }
                 .padding(.vertical)
@@ -276,6 +291,27 @@ struct PreferencesView: View {
         }
     }
     
+    /// Restores the drawer cards a long press can hide.
+    private var drawerSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionHeader(title: "Drawer")
+
+            VStack(spacing: 0) {
+                Toggle("Today", isOn: $showToday)
+                    .padding(.horizontal)
+                    .padding(.vertical, 13)
+
+                Divider().padding(.leading)
+
+                Toggle("Summary", isOn: $showCadenceSummary)
+                    .padding(.horizontal)
+                    .padding(.vertical, 13)
+            }
+            .cardStyle(radius: 12)
+            .padding(.horizontal)
+        }
+    }
+
     private var notificationSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             SectionHeader(title: "Notifications")

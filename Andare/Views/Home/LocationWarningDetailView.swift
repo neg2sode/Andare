@@ -81,9 +81,7 @@ struct LocationWarningDetailView: View {
                             .font(.headline).fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .cornerRadius(16)
-                    .controlSize(.large)
+                    .primaryActionStyle()
 
                     Button {
                         showLocationWarningPreference = false

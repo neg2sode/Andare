@@ -14,6 +14,10 @@ struct DrawerView: View {
     
     @ObservedObject private var alertManager = AlertManager.shared
 
+    // Long-press hides either informational card; Preferences brings it back.
+    @AppStorage(DrawerCard.today.storageKey) private var showToday = true
+    @AppStorage(DrawerCard.cadenceSummary.storageKey) private var showCadenceSummary = true
+
     @Binding var drawerDetent: PresentationDetent
     @EnvironmentObject var pagingState: WorkoutPagingState
 
@@ -51,8 +55,14 @@ struct DrawerView: View {
             // MARK: - Scrollable Content
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    TodaySection()
-                    CadenceSummarySection()
+                    if showToday {
+                        TodaySection()
+                            .hideOnLongPress { hide(.today) }
+                    }
+                    if showCadenceSummary {
+                        CadenceSummarySection()
+                            .hideOnLongPress { hide(.cadenceSummary) }
+                    }
                     RecentWorkoutsView(isExpanded: $workoutsExpanded)
                     ArticlesView()
                     ContactMeView()
@@ -99,5 +109,32 @@ struct DrawerView: View {
         } message: {
             Text(alertManager.message)
         }
+    }
+
+    /// Hides a card and says where to get it back, since a long press that
+    /// makes something disappear is otherwise a one-way door.
+    private func hide(_ card: DrawerCard) {
+        withAnimation(.easeInOut(duration: 0.25)) {
+            switch card {
+            case .today: showToday = false
+            case .cadenceSummary: showCadenceSummary = false
+            }
+        }
+
+        // VibrationManager owns the CoreHaptics workout patterns; a plain UI
+        // confirmation is what the standard generator is for.
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        alertManager.showAlert(
+            title: "\(card.title) Hidden",
+            message: "You can show it again in Preferences, under Drawer."
+        )
+    }
+}
+
+private extension View {
+    /// Long press to hide, with the press target covering the whole card.
+    func hideOnLongPress(perform action: @escaping () -> Void) -> some View {
+        self.contentShape(Rectangle())
+            .onLongPressGesture(minimumDuration: 0.5, perform: action)
     }
 }

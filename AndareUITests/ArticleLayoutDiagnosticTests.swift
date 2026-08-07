@@ -67,7 +67,7 @@ final class ArticleLayoutDiagnosticTests: XCTestCase {
             shot.lifetime = .keepAlways
             add(shot)
 
-            app.buttons["Done"].tap()
+            dismissArticle(app)
             sleep(2)
         }
 
@@ -75,5 +75,19 @@ final class ArticleLayoutDiagnosticTests: XCTestCase {
         dump.name = "overflow-report"
         dump.lifetime = .keepAlways
         add(dump)
+    }
+
+    /// The article sheet closes with a role-based Close button on iOS 26 and a
+    /// plain "Done" below it.
+    @MainActor
+    private func dismissArticle(_ app: XCUIApplication) {
+        for label in ["Close", "Done"] {
+            let button = app.buttons[label].firstMatch
+            if button.exists && button.isHittable {
+                button.tap()
+                return
+            }
+        }
+        XCTFail("no Close or Done button to dismiss the article")
     }
 }

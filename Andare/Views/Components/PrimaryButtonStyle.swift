@@ -7,10 +7,12 @@
 
 import SwiftUI
 
-/// Filled accent-colour action button used in guide footers and floating
-/// "Done" buttons. Radius 16 for inline placement; footers may use larger.
+/// Filled accent-colour action button used for every major action: guide
+/// footers, the summary sheet's Done button, and the location warning.
+/// One radius across all of them so major actions read as a single control.
 struct PrimaryButtonStyle: ButtonStyle {
-    var radius: CGFloat = 16
+    var radius: CGFloat = 20
+    var tint: Color = .accentColor
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -18,7 +20,7 @@ struct PrimaryButtonStyle: ButtonStyle {
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.accentColor)
+            .background(tint)
             .clipShape(RoundedRectangle(cornerRadius: radius))
             .opacity(configuration.isPressed ? 0.85 : 1.0)
     }
