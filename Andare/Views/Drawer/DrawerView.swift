@@ -18,6 +18,8 @@ struct DrawerView: View {
 
     @ObservedObject private var alertManager = AlertManager.shared
 
+    @AppStorage(WeekStart.storageKey) private var weekStart: WeekStart = .system
+
     @Binding var drawerDetent: PresentationDetent
     @EnvironmentObject var pagingState: WorkoutPagingState
 
@@ -151,7 +153,7 @@ struct DrawerView: View {
     /// second line and drag the chevron out of alignment. Scaling down beats
     /// wrapping for a header that has to share its row with two controls.
     private var titleText: some View {
-        Text(scope.title())
+        Text(scope.title(calendar: weekStart.calendar))
             .font(.largeTitle)
             .fontWeight(.bold)
             .lineLimit(1)

@@ -23,6 +23,7 @@ struct PreferencesView: View {
     @AppStorage("finishWorkoutAlertEnabled") private var finishWorkoutAlertEnabled: Bool = false
     @AppStorage("notificationFrequencyRawValue") private var notificationFrequencyRawValue: String = NotificationFrequency.normal.rawValue
     @AppStorage("unitSystemPreference") private var unitSystem: UnitSystem = .systemDefault
+    @AppStorage(WeekStart.storageKey) private var weekStart: WeekStart = .system
     @AppStorage("userWeightKg") private var userWeightKg: Double = 70.0
     @AppStorage("userHeightCm") private var userHeightCm: Double = 170.0
     @State private var showingLocationWarningDetail = false
@@ -274,7 +275,7 @@ struct PreferencesView: View {
                         
                         HStack {
                             Text(unitSystem.rawValue)
-                            
+
                             Image(systemName: "chevron.up.chevron.down")
                                 .font(.caption.weight(.semibold))
                         }
@@ -284,6 +285,47 @@ struct PreferencesView: View {
                     .padding(.vertical, 13)
                 }
                 .tint(.primary)
+
+                Divider().padding(.leading)
+
+                // The locale's answer is right for most people and wrong for
+                // anyone whose training week disagrees with their region's — a
+                // Sunday-start week empties itself every Sunday morning, taking
+                // six days of workouts out of view with it.
+                Menu {
+                    ForEach(WeekStart.allCases) { option in
+                        Button {
+                            self.weekStart = option
+                        } label: {
+                            HStack {
+                                Text(option.label)
+                                if weekStart == option {
+                                    Spacer()
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack {
+                        Text("Week Starts On")
+
+                        Spacer()
+
+                        HStack {
+                            Text(weekStart.displayLabel)
+
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption.weight(.semibold))
+                        }
+                        .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal)
+                    .padding(.vertical, 13)
+                }
+                .tint(.primary)
+                .accessibilityLabel("Week starts on")
+                .accessibilityValue(weekStart.displayLabel)
             }
             .cardStyle()
             .padding(.horizontal)

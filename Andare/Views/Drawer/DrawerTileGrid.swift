@@ -32,6 +32,7 @@ struct DrawerTileGrid: View {
     @Environment(\.scenePhase) private var scenePhase
 
     @AppStorage(DrawerLayout.storageKey) private var layout = DrawerLayout.default
+    @AppStorage(WeekStart.storageKey) private var weekStart: WeekStart = .system
 
     private var tiles: [DrawerTile] { layout.entries.map(\.tile) }
 
@@ -147,7 +148,7 @@ struct DrawerTileGrid: View {
     }
 
     private var workoutsInScope: [WorkoutDataModel] {
-        let interval = scope.interval()
+        let interval = scope.interval(calendar: weekStart.calendar)
         return workouts.filter { interval.contains($0.startTime) }
     }
 
@@ -187,7 +188,7 @@ struct DrawerTileGrid: View {
             guard var amount = reading.minutes else {
                 return placeholderReading(for: tile, label: label)
             }
-            if averaging { amount /= Double(scope.daysElapsed()) }
+            if averaging { amount /= Double(scope.daysElapsed(calendar: weekStart.calendar)) }
             return formatted(
                 tile,
                 amount: amount,
@@ -201,7 +202,7 @@ struct DrawerTileGrid: View {
             guard var amount = healthValues[tile] else {
                 return placeholderReading(for: tile, label: label)
             }
-            if averaging { amount /= Double(scope.daysElapsed()) }
+            if averaging { amount /= Double(scope.daysElapsed(calendar: weekStart.calendar)) }
             return formatted(tile, amount: amount, label: label)
         }
 
@@ -258,7 +259,7 @@ struct DrawerTileGrid: View {
 
     private func refresh() async {
         let manager = HealthKitManager.shared
-        let interval = scope.interval()
+        let interval = scope.interval(calendar: weekStart.calendar)
 
         access = await manager.todayDataAccess()
 

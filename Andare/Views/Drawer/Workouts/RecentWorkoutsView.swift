@@ -28,10 +28,12 @@ struct RecentWorkoutsView: View {
     /// disagreed with the rest of the drawer about what period it covered.
     let scope: DrawerScope
 
+    @AppStorage(WeekStart.storageKey) private var weekStart: WeekStart = .system
+
     private let rowHeight: CGFloat = 92
 
     private var workoutsToShow: [WorkoutDataModel] {
-        let interval = scope.interval()
+        let interval = scope.interval(calendar: weekStart.calendar)
         return workouts.filter { interval.contains($0.startTime) }
     }
 
