@@ -2,16 +2,16 @@
 
 Finding the right pace in cycling, running and walking is hard: the human body doesn't naturally recognise its preferred cadence when the activity level changes or the terrain is unusual, and settling into a biased cadence over the long term can be genuinely harmful for people with persistent knee pain or muscular stress. Andare solves this by bringing sensor-based cadence measurement to the iPhone itself — no bike-mounted cadence sensor, no watch required — and wrapping it in a full workout app with health insights and data-driven statistics.
 
-<img width="3000" height="2250" alt="andare_showcase" src="https://github.com/user-attachments/assets/34665887-57a2-4782-ba2d-25262da7f8a7" />
+![Andare on iPhone: workout summary, home screen, and the drawer in weekly scope](andare_showcase.png)
 
 ## The workout flow
 
-1. **Pick a workout** — swipe the home carousel between Ride, Run and Walk (each with its own animated start-button shape), or tap a page-indicator dot in the drawer.
+1. **Pick a workout** — swipe the home carousel between Ride, Run and Walk, each with its own animated start-button shape.
 2. **First time per type: the guide** — a two-screen card flow explains where to place your phone for good gyro signal, warns about road safety, and requests the permissions the app actually needs, with live status rows and per-permission explanations.
 3. **Countdown** — a 5-second countdown (tap anywhere to skip) prepares the HealthKit workout, location tracking and background execution, so you can lock the screen safely before you set off.
 4. **Live workout** — big glanceable stats (cadence, speed *or* pace by type, calories, elevation, distance) in portrait and landscape. A Live Activity mirrors your preferred cadence on the Lock Screen and in the Dynamic Island. Swipe down for a "vibe" panel of three flowing gyroscope traces. Stopping requires a deliberate 1.5-second hold — accidental taps just nudge the button.
-5. **Summary** — average-cadence hero card with a zone verdict and an icon that bounces at your actual cadence, a stat-card grid, a cadence-over-time chart coloured by zone, your route on a map (tap for full screen), and a debug-log section you can copy or email.
-6. **History** — workouts persist on device and sync to Apple Health/Fitness. The drawer shows recent workouts, a weekly cadence verdict, and today's daylight/step counts.
+5. **Summary** — an average-cadence hero card with a zone verdict and an icon that bounces at your actual cadence, then your route on a map (tap for full screen), a cadence-over-time chart coloured by zone, and a Workout Details card. A debug-log section can be copied or emailed.
+6. **History** — workouts persist on device and sync to Apple Health/Fitness. The drawer collects today's or this week's numbers, your workouts, and a cadence verdict.
 
 ## How cadence detection works
 
@@ -36,20 +36,21 @@ Other measurements:
 
 - **Elevation gain** from the barometer (`CMAltimeter` relative altitude).
 - **Distance / speed / route** from Core Location (with the required coordinate transform for maps in China).
-- **Calories** estimated from workout intensity and your body mass read from HealthKit (falling back to a default when unavailable), split into active and total.
+- **Calories** from a MET table indexed by workout type and speed, against your body mass. Energy is split into two parts that are never confused: *active* is measured above rest (`(MET − 1) × kg × hours`), and *resting* accrues for the whole workout whether or not you were moving — or whether a GPS fix landed in that window. Total is derived from the two rather than accumulated separately, so it cannot drift from them.
 
 ## App tour
 
 - **Home** — paging carousel with per-type sculpted start buttons (breathing animation, rotating hint text), countdown with lock-screen nudge, live stats overlay, long-press stop button.
 - **Guide** (first run per workout type) — placement screen with animated phone-position checklist and risk warning, then a permissions screen with real status rows for Workouts (HealthKit), Location, and Motion & Fitness (hidden on devices without a barometer). Backing out doesn't burn your first-run guide.
 - **Drawer** — a native SwiftUI sheet pinned at a 100 pt detent (background remains interactive) that expands to full height:
-  - **Today** — real HealthKit read queries for Time in Daylight and Steps, with an honest em-dash when data is unreadable and an opt-in "Allow Health Access" prompt.
-  - **Summary** — a weekly verdict card: >60 % of the week's workouts in the Sound zone earns "Sound Cadence", otherwise a gentle "Know Your Cadence" coaching card.
-  - **Recent Workouts** — today/this-week windowing, cadence-led thumbnail cards with zone-coloured units and ↑/↓ hints, swipe to hide or delete (with confirmation), tap for the full summary.
+  - **Scope** — the title *is* the control: `Friday · 8 Aug` or `This Week · Aug 3–7`, and it governs every section at once. "This week" means the locale's calendar week, and averages divide by days elapsed rather than by seven, so a Tuesday doesn't read as a bad week. The menu is inert while the drawer is collapsed, where that 100 pt bar is what you tap to open it.
+  - **Tiles** — a customisable grid: Time in Daylight, Steps, Walking Distance, Workout Distance, Workout Time, and a full-width Cadence card. Long-press to reorder, add or remove them, and to choose whether a weekly figure reads as a total or an average. Daylight falls back to outdoor workout time when Health has nothing, captioned "Est." so an inference is never mistaken for a measurement.
+  - **Cadence** — count-phrased rather than graded: "1 of 2 Off Cadence", or "All 5 workouts this week held a sound cadence". Workouts that recorded no cadence are excluded from the count rather than treated as failures.
+  - **Workouts** — cadence-led thumbnail cards with zone-coloured units and ↑/↓ hints, swipe to hide or delete (with confirmation), tap for the full summary.
   - **Articles** — in-app reading on cadence, consistency and technique.
   - **Contact Me** — rate, feedback mail, and links.
   - **Page indicator** — dots mirroring which workout the home carousel is showing.
-- **Preferences** — unit system (metric / imperial / follow locale), profile (with Apple Health sync), notification toggles, and a permissions overview with live statuses.
+- **Preferences** — the tile editor, unit system (metric / imperial / follow locale), a permissions overview with live statuses, profile (with Apple Health sync), and notification toggles.
 - **Notifications** — optional local alerts for ride status and cadence guidance while the screen is off.
 - **Live Activity** (`AndareWidgets` target) — Lock Screen banner plus Dynamic Island compact/expanded layouts showing elapsed time and preferred cadence.
 
@@ -76,12 +77,18 @@ The project uses filesystem-synchronised Xcode groups: adding or moving source f
 
 ## Testing
 
+Unit tests cover the arithmetic that is invisible until it is wrong — calorie accounting, calendar-week boundaries across locales, chart gridline spacing, and the saved tile layout's encoding.
+
 The UI-test suites double as scripted walkthroughs and capture screenshots at every step:
 
 - `WorkoutFlowDiagnosticTests` — start → guide → permission grants (including the system HealthKit sheet and location alert) → countdown skip → live screen → gyro panel → hold-to-stop → summary.
+- `DrawerScopeUITests` — the title menu switches every section at once, and stays inert while the drawer is collapsed.
+- `DrawerCustomizationTests` — reorder, remove and re-add tiles; per-tile aggregation.
 - `DrawerSheetDiagnosticTests` — drawer detents, expand/collapse, background interaction.
 - `PreferencesDiagnosticTests` — editable profile rows, keyboard toolbar, Apple Health sync indicator, notification info alerts.
 - `ArticleLayoutDiagnosticTests` — asserts no article content is wider than the screen, which would turn the vertical scroll view into a two-axis one.
+- `WorkoutSummaryLayoutTests` — renders the summary over a sample ride, since a simulator workout has neither cadence nor GPS and the chart and map are otherwise always empty states.
+- `AccessibilityAuditTests` — runs `performAccessibilityAudit` over home, drawer, an article and Preferences.
 
 ```sh
 xcodebuild -scheme Andare \
@@ -98,6 +105,8 @@ xcodebuild ... -resultBundlePath results.xcresult test
 xcrun xcresulttool export attachments --path results.xcresult --output-path shots/
 ```
 
+The suite is written for Xcode's default parallel execution, where each test method gets a fresh simulator clone. Forcing `-parallel-testing-enabled NO` puts every method on one device and they contaminate each other.
+
 ## Project structure
 
 ```
@@ -109,7 +118,7 @@ Andare/
 │   │                                 #   location, motion, live activity, gyro stream
 │   ├── MotionManager.swift           # 100 Hz gyro capture, FFT pipeline, altimeter
 │   ├── LocationManager.swift         # Core Location auth + route tracking
-│   ├── HealthKitManager.swift        # auth, workout saving, body metrics, Today queries
+│   ├── HealthKitManager.swift        # auth, workout saving, body metrics, tile queries
 │   ├── MotionPermissionManager.swift # CMAltimeter-based Motion & Fitness auth
 │   ├── NotificationManager.swift     # local notification auth + delivery
 │   ├── AlertManager.swift            # app-wide alert presentation
@@ -129,8 +138,8 @@ Andare/
 │   │                           #   LongPressStopButton, SectionHeader
 │   ├── Home/                   # carousel, start buttons, countdown, guide flow
 │   ├── Session/                # live stats overlay + gyro panel, summary, full map
-│   └── Drawer/                 # drawer sheet: Today, Summary, workouts, articles,
-│                               #   preferences, page indicator
+│   └── Drawer/                 # drawer sheet: scope title, tile grid + editor,
+│                               #   cadence tile, workouts, articles, preferences
 AndareWidgets/                  # Live Activity extension (Lock Screen + Dynamic Island)
 AndareTests/                    # unit tests
 AndareUITests/                  # diagnostic walkthrough suites (screenshots)
@@ -141,7 +150,7 @@ AndareUITests/                  # diagnostic walkthrough suites (screenshots)
 - **State machine**: the home screen runs on a single `SessionState` enum (`idle → guidePlacement → guidePermissions → countingDown → starting → active → summary → transitioning`), so exactly one flow view exists at a time.
 - **Ownership**: shared singletons are observed with `@ObservedObject`; `@StateObject` is reserved for objects a view actually owns (e.g. `RideSessionManager` in `HomeView`).
 - **Gated streaming**: the raw gyro feed for the live charts is published in 10-sample batches and only subscribed to while the panel is visible, the app is active, and the device is in portrait — the FFT pipeline itself never depends on the UI.
-- **Persistence invariant**: `CadenceZone` raw values (e.g. `"Normal"`) are encoded inside persisted SwiftData records. UI copy goes through `displayName` (`"Sound"`); **never rename the raw values** or old workouts stop decoding.
+- **Persistence invariant**: `CadenceZone` raw values (e.g. `"Normal"`) are encoded inside persisted SwiftData records, and `DrawerTile` raw values inside the saved tile layout. UI copy goes through `displayName` (`"Sound"`); **never rename the raw values** or old data stops decoding.
 - **Units**: everything is stored in SI (metres, m/s, kcal) and converted at display time by `StatsFormatter`, including the run/walk pace representation (`5'30" /KM`).
 - **Alerts**: `AlertManager` keeps one host per presentation context (home, drawer, preferences sheet) because SwiftUI alerts must attach to the topmost presented context.
 - **Notifications**: while the screen is off, the app can nudge you about low/high cadence, suggest pushing the bike on steep terrain, and ask whether you've finished; frequency and the finish-workout alert are configurable in Preferences.
@@ -151,7 +160,7 @@ AndareUITests/                  # diagnostic walkthrough suites (screenshots)
 | Permission | Why | Required? |
 |---|---|---|
 | HealthKit (share) | Save workouts, routes, cadence, energy; read body mass/height for calories | Yes, for saving workouts |
-| HealthKit (read) | Today cards (Time in Daylight, Steps); profile sync | Optional |
+| HealthKit (read) | Drawer tiles (Time in Daylight, Steps, Walking Distance); profile sync | Optional |
 | Location (when in use) | Distance, speed/pace, route map | Yes, for outdoor metrics |
 | Motion & Fitness | Barometer elevation gain | Optional (elevation degrades without it) |
 | Notifications | Ride status & cadence alerts with the screen off | Optional |
