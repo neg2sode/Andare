@@ -43,14 +43,14 @@ Other measurements:
 - **Home** — paging carousel with per-type sculpted start buttons (breathing animation, rotating hint text), countdown with lock-screen nudge, live stats overlay, long-press stop button.
 - **Guide** (first run per workout type) — placement screen with animated phone-position checklist and risk warning, then a permissions screen with real status rows for Workouts (HealthKit), Location, and Motion & Fitness (hidden on devices without a barometer). Backing out doesn't burn your first-run guide.
 - **Drawer** — a native SwiftUI sheet pinned at a 100 pt detent (background remains interactive) that expands to full height:
-  - **Scope** — the title *is* the control: `Friday · 8 Aug` or `This Week · Aug 3–7`, and it governs every section at once. "This week" means the locale's calendar week, and averages divide by days elapsed rather than by seven, so a Tuesday doesn't read as a bad week. The menu is inert while the drawer is collapsed, where that 100 pt bar is what you tap to open it.
+  - **Scope** — the title *is* the control: `Friday · 8 Aug` or `This Week · Aug 3–7`, and it governs every section at once. "This week" is a calendar week starting on the day you choose in Preferences (the locale's day by default), and averages divide by days elapsed rather than by seven, so a Tuesday doesn't read as a bad week. The menu is inert while the drawer is collapsed, where that 100 pt bar is what you tap to open it.
   - **Tiles** — a customisable grid: Time in Daylight, Steps, Walking Distance, Workout Distance, Workout Time, and a full-width Cadence card. Long-press to reorder, add or remove them, and to choose whether a weekly figure reads as a total or an average. Daylight falls back to outdoor workout time when Health has nothing, captioned "Est." so an inference is never mistaken for a measurement.
   - **Cadence** — count-phrased rather than graded: "1 of 2 Off Cadence", or "All 5 workouts this week held a sound cadence". Workouts that recorded no cadence are excluded from the count rather than treated as failures.
   - **Workouts** — cadence-led thumbnail cards with zone-coloured units and ↑/↓ hints, swipe to hide or delete (with confirmation), tap for the full summary.
   - **Articles** — in-app reading on cadence, consistency and technique.
   - **Contact Me** — rate, feedback mail, and links.
   - **Page indicator** — dots mirroring which workout the home carousel is showing.
-- **Preferences** — the tile editor, unit system (metric / imperial / follow locale), a permissions overview with live statuses, profile (with Apple Health sync), and notification toggles.
+- **Preferences** — the tile editor, unit system (metric / imperial / follow locale), which day the week starts on, a permissions overview with live statuses, profile (with Apple Health sync), and notification toggles.
 - **Notifications** — optional local alerts for ride status and cadence guidance while the screen is off.
 - **Live Activity** (`AndareWidgets` target) — Lock Screen banner plus Dynamic Island compact/expanded layouts showing elapsed time and preferred cadence.
 
