@@ -15,7 +15,7 @@ import SwiftUI
 /// competing with the sheet's own drag gesture. A `List` in edit mode gets the
 /// grab handles for free and cannot fight anything.
 struct CustomizeDrawerView: View {
-    @AppStorage(DrawerLayoutMigration.storageKey) private var layout = DrawerLayout.default
+    @AppStorage(DrawerLayout.storageKey) private var layout = DrawerLayout.default
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

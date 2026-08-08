@@ -31,7 +31,7 @@ struct DrawerTileGrid: View {
 
     @Environment(\.scenePhase) private var scenePhase
 
-    @AppStorage(DrawerLayoutMigration.storageKey) private var layout = DrawerLayout.default
+    @AppStorage(DrawerLayout.storageKey) private var layout = DrawerLayout.default
 
     private var tiles: [DrawerTile] { layout.entries.map(\.tile) }
 
@@ -156,6 +156,20 @@ struct DrawerTileGrid: View {
     /// a dash rather than a zero.
     private var healthPlaceholder: String { access == .readable ? "0" : "–" }
 
+    /// Time spent working out in this scope, in minutes.
+    private var workoutMinutes: Double {
+        workoutsInScope.reduce(0) { $0 + $1.duration } / 60
+    }
+
+    /// Keeps the unit: "– MIN" names the quantity that is missing, where a bare
+    /// dash says only that something is.
+    private func placeholderReading(for tile: DrawerTile, label: String) -> Reading {
+        var reading = formatted(tile, amount: 0, label: label)
+        reading.value = healthPlaceholder
+        reading.spoken = "\(label), no data"
+        return reading
+    }
+
     private func aggregation(for tile: DrawerTile) -> Aggregation {
         layout.aggregation(for: tile)
     }
@@ -165,10 +179,27 @@ struct DrawerTileGrid: View {
         let label = tile.label(scope: scope, aggregation: aggregation)
         let averaging = scope == .week && aggregation == .average
 
+        if tile == .daylight {
+            let reading = DaylightReading.resolve(
+                healthMinutes: healthValues[.daylight],
+                workoutMinutes: workoutMinutes
+            )
+            guard var amount = reading.minutes else {
+                return placeholderReading(for: tile, label: label)
+            }
+            if averaging { amount /= Double(scope.daysElapsed()) }
+            return formatted(
+                tile,
+                amount: amount,
+                label: reading.isEstimated
+                    ? tile.estimatedLabel(scope: scope, aggregation: aggregation)
+                    : label
+            )
+        }
+
         if tile.isHealthKitBacked {
             guard var amount = healthValues[tile] else {
-                return Reading(label: label, value: healthPlaceholder, unit: "",
-                               unitColour: .clear, spoken: "\(label), no data")
+                return placeholderReading(for: tile, label: label)
             }
             if averaging { amount /= Double(scope.daysElapsed()) }
             return formatted(tile, amount: amount, label: label)
@@ -213,7 +244,8 @@ struct DrawerTileGrid: View {
                            spoken: "\(label), \(stats.value) \(stats.unit)")
 
         case .rideDuration:
-            let stats = formatter.formatDuration(amount)
+            // An aggregate, so two significant units rather than a stopwatch.
+            let stats = formatter.formatAggregateDuration(amount)
             return Reading(label: label, value: stats.value, unit: stats.unit, unitColour: stats.colour,
                            spoken: "\(label), \(stats.value)")
 

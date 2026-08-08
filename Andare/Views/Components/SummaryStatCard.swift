@@ -53,6 +53,9 @@ struct SummaryStatContent: View {
                     .font(size.labelFont)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    // Captions vary in length once a tile can say "Est. Avg.
+                    // Daylight"; shrinking beats truncating.
+                    .minimumScaleFactor(0.85)
             }
 
             HStack(alignment: .lastTextBaseline, spacing: 2) {

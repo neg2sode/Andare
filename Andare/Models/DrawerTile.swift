@@ -109,6 +109,12 @@ enum DrawerTile: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    /// Caption for a value the app worked out itself rather than read from
+    /// Health, so the tile never passes an estimate off as a measurement.
+    func estimatedLabel(scope: DrawerScope, aggregation: Aggregation) -> String {
+        scope == .week && aggregation == .average ? "Est. Avg. Daylight" : "Est. Daylight"
+    }
+
     /// The card's caption, which changes with scope so the tile says a different
     /// thing rather than silently swapping a number under a fixed label.
     func label(scope: DrawerScope, aggregation: Aggregation) -> String {

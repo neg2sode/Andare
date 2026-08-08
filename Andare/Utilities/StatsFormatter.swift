@@ -52,6 +52,30 @@ class StatsFormatter: ObservableObject {
         return FormattedStats(value: formattedString, unit: "", colour: Color.durationColour)
     }
 
+    /// A duration summed over a day or a week, in its two most significant
+    /// units — "2h 59m", "47m 12s", "38s".
+    ///
+    /// A clock string reads as a stopwatch, which is right for one ride but
+    /// wrong for a total: nobody needs the seconds of a three-hour week, and
+    /// "2:59:47" leaves most of a drawer tile empty.
+    func formatAggregateDuration(_ duration: TimeInterval) -> FormattedStats {
+        let totalSeconds = max(Int(duration), 0)
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let seconds = totalSeconds % 60
+
+        let value: String
+        if hours > 0 {
+            value = "\(hours)h \(minutes)m"
+        } else if minutes > 0 {
+            value = "\(minutes)m \(seconds)s"
+        } else {
+            value = "\(seconds)s"
+        }
+
+        return FormattedStats(value: value, unit: "", colour: Color.durationColour)
+    }
+
     func formatDistance(_ distanceInMeters: Double) -> FormattedStats {
         let system = resolveUnitSystem()
         
