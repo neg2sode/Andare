@@ -17,13 +17,14 @@ extension WorkoutData {
     /// screen's two most visual sections impossible to check. This stands in
     /// for one. Debug builds only; reachable via the `-showSampleSummary`
     /// launch argument.
-    static var sample: WorkoutData {
-        let start = Date().addingTimeInterval(-360)
+    static func sample(minutes: Double = 6) -> WorkoutData {
+        let seconds = minutes * 60
+        let start = Date().addingTimeInterval(-seconds)
         var segments: [CadenceSegment] = []
 
-        // Six minutes at one segment each, wandering across the cadence zones
-        // so every legend entry has something to colour.
-        let count = Int(360 / MotionManager.SEGMENT_DURATION)
+        // One segment each, wandering across the cadence zones so every legend
+        // entry has something to colour.
+        let count = Int(seconds / MotionManager.SEGMENT_DURATION)
         for index in 0..<count {
             let progress = Double(index) / Double(count)
             let cadence: Double
@@ -34,7 +35,9 @@ extension WorkoutData {
             default: cadence = 104 + sin(progress * 24) * 8 // pushing, high
             }
 
-            let latitude = 31.2304 + Double(index) * 0.0004
+            // Scaled by progress, not by index, so the route covers the same
+            // ground whether the sample is six minutes or an hour.
+            let latitude = 31.2304 + progress * 0.03
             let longitude = 121.4737 + sin(progress * 6) * 0.004
 
             segments.append(
@@ -54,6 +57,12 @@ extension WorkoutData {
         let measured = segments.filter { $0.cadence > 0 }
         let average = measured.reduce(0) { $0 + $1.cadence } / Double(max(measured.count, 1))
 
+        // Roughly consistent with 6.2 m/s over the moving portion, and with the
+        // MET 8 cycling band at 70kg.
+        let movingHours = Double(measured.count) * MotionManager.SEGMENT_DURATION / 3600
+        let active = 7.0 * 70 * movingHours
+        let basal = seconds / 3600 * 70
+
         return WorkoutData(
             workoutType: .cycling,
             startTime: start,
@@ -62,12 +71,12 @@ extension WorkoutData {
             notificationIntents: [],
             logMessages: ["Sample workout for layout review."],
             averageCadence: average,
-            totalDistance: 4_512,
+            totalDistance: Double(measured.count) * 31.7,
             averageSpeed: 6.2,
             maxSpeed: 9.4,
             elevationGain: 38,
-            activeCalories: 214,
-            totalCalories: 288,
+            activeCalories: active,
+            totalCalories: active + basal,
             mapDisplayContext: .full
         )
     }

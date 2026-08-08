@@ -292,6 +292,10 @@ struct WorkoutSummaryView: View {
         CadenceChartAxis.gridValues(forDuration: data.duration)
     }
 
+    private var showsZeroMarkers: Bool {
+        CadenceChartAxis.showsZeroMarkers(forDuration: data.duration)
+    }
+
     @ViewBuilder
     private var chartCard: some View {
         Group {
@@ -317,7 +321,10 @@ struct WorkoutSummaryView: View {
                         LegendItem(colour: Color.lowCadenceColour, text: CadenceZone.low.displayName)
                         LegendItem(colour: Color.cadenceColour, text: CadenceZone.normal.displayName)
                         LegendItem(colour: Color.highCadenceColour, text: CadenceZone.high.displayName)
-                        LegendItem(colour: Color.gray, text: CadenceZone.zero.displayName)
+                        // Only worth naming while those markers are drawn.
+                        if showsZeroMarkers {
+                            LegendItem(colour: Color.gray, text: CadenceZone.zero.displayName)
+                        }
                     }
                  }
                 .chartYScale(domain: 0...data.workoutType.cadenceInfo.range.max)
@@ -528,7 +535,10 @@ struct WorkoutSummaryView: View {
         // Use the pre-calculated timeOffset from the wrapper
         let xValue: PlottableValue = .value("Time", timeOffset)
 
-        if segment.zone != .zero {
+        if segment.zone == .zero && !showsZeroMarkers {
+            // Nothing: on a long ride these merge into a grey band along the
+            // axis, which reads as a chart element rather than as data.
+        } else if segment.zone != .zero {
             BarMark(
                 x: xValue,
                 yStart: .value("Cadence Min", 0),

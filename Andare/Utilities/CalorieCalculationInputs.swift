@@ -9,39 +9,40 @@ import Foundation
 
 struct CalorieCalculationInputs {
     let duration: TimeInterval // seconds
-    let distance: Double // meters
-    let speed: Double // m/s
+    /// nil when the segment produced no GPS fix. Resting energy still accrues;
+    /// only the active term needs a speed to pick a MET.
+    let speed: Double? // m/s
     let cadence: Double
     let workoutType: WorkoutType
     let weight: Double
-    let height: Double
-    
-    func calculate() -> (active: Double, total: Double) {
-        let durationHours = duration / 3600.0 // Convert seconds to hours
+
+    /// Energy for one segment, split into the part burned by moving and the
+    /// part burned by simply existing.
+    ///
+    /// Active energy is measured *above* rest: the MET scale is relative to
+    /// resting metabolism, so 1 MET is subtracted and the basal term carries it
+    /// instead. `active + basal` is then exactly `MET × weight × hours`.
+    func calculate() -> (active: Double, basal: Double) {
+        let durationHours = duration / 3600.0
         let basalCalories = weight * durationHours
-        
-        guard self.isValid else { return (active: 0.0, total: basalCalories) }
-        
-        let activeCalories = metValue * weight * durationHours
-        let totalCalories = activeCalories + basalCalories
-        
-        return (active: activeCalories, total: totalCalories)
+
+        guard self.isValid else { return (active: 0.0, basal: basalCalories) }
+
+        let activeCalories = max(metValue - 1.0, 0.0) * weight * durationHours
+        return (active: activeCalories, basal: basalCalories)
     }
 }
 
 private extension CalorieCalculationInputs {
     var isValid: Bool {
-        weight > 0 && duration > 0 && cadence > 0 && MovementActivity.zone(for: speed) != .stationary
+        guard let speed, weight > 0, duration > 0, cadence > 0 else { return false }
+        return MovementActivity.zone(for: speed) != .stationary
     }
-    
-    var speedKph: Double {
-        speed * 3.6
-    }
-    
+
     var speedMph: Double {
-        speed * 2.23694
+        (speed ?? 0) * 2.23694
     }
-    
+
     var metValue: Double {
         switch workoutType {
         case .cycling:
@@ -60,7 +61,6 @@ private extension CalorieCalculationInputs {
             }
             
         case .running:
-            let speedMph = speed * 2.23694
             if speedMph < 5 {
                 return 6.0 // Jogging
             } else if speedMph < 6 {

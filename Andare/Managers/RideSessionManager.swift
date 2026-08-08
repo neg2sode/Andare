@@ -23,7 +23,7 @@ struct CadenceSegmentComputationResult {
     let elevationGain: Double
     let cadence: Double
     let validLocations: [CLLocation]
-    let calories: (active: Double, total: Double)?
+    let calories: (active: Double, basal: Double)?
 }
 
 @MainActor
@@ -47,7 +47,12 @@ final class RideSessionManager: ObservableObject {
     @Published var averageSpeed: Double?
     @Published var maxSpeed: Double?
     @Published var activeCalories: Double = 0.0
-    @Published var totalCalories: Double = 0.0
+    @Published var basalCalories: Double = 0.0
+
+    /// Derived rather than accumulated. A second running sum silently drifted
+    /// from these two when it was missed by `resetSessionState()`, which made
+    /// every ride after the first report the whole session's energy.
+    var totalCalories: Double { activeCalories + basalCalories }
     @Published var logEntries: [LogEntry] = []
     @Published var locationAuthStatus: CLAuthorizationStatus = .notDetermined
 
@@ -125,6 +130,12 @@ final class RideSessionManager: ObservableObject {
 
     func startRide() async {
         guard workoutBuilder == nil else { return }
+
+        // Start from zero rather than trusting the last teardown. A ride
+        // discarded for being under a minute never reaches the summary sheet,
+        // which is the only other thing that resets — leaving its segments to
+        // be treated as this ride's history.
+        resetSessionState()
 
         // Use .local() for the current device (iPhone)
         workoutBuilder = HKWorkoutBuilder(healthStore: healthStore, configuration: workoutConfiguration, device: .local())
@@ -283,7 +294,7 @@ final class RideSessionManager: ObservableObject {
                 
                 if let calories = result.calories {
                     self.activeCalories += calories.active
-                    self.totalCalories += calories.total
+                    self.basalCalories += calories.basal
                 }
                 
                 if !result.validLocations.isEmpty {
@@ -457,7 +468,7 @@ final class RideSessionManager: ObservableObject {
         var terrainGradient: TerrainGradient = .notDetermined
         var segmentCadence = rawCadence
         var elevationGain: Double = 0
-        var calorieResult: (active: Double, total: Double)? = nil
+        var calorieResult: (active: Double, basal: Double)? = nil
 
         if !relevantLocs.isEmpty {
             let validSpeeds = relevantLocs.compactMap { $0.speed >= 0 ? $0.speed : nil }
@@ -524,20 +535,16 @@ final class RideSessionManager: ObservableObject {
         
         let cadenceZone = CadenceZone.zone(for: segmentCadence, workoutType: workoutType)
 
-        if let distance = segmentDistance, let speed = segmentSpeed {
-            let inputs = CalorieCalculationInputs(
-                duration: duration,
-                distance: distance,
-                speed: speed,
-                cadence: segmentCadence,
-                workoutType: workoutType,
-                weight: userWeightKg,
-                height: userHeightCm
-            )
-            let active = inputs.calculate().active
-            let total = inputs.calculate().total
-            calorieResult = (active, total)
-        }
+        // Always accounted for: resting energy is burned whether or not the
+        // segment happened to land a GPS fix. Only the active term needs a
+        // speed, and `CalorieCalculationInputs` returns zero for it without one.
+        calorieResult = CalorieCalculationInputs(
+            duration: duration,
+            speed: segmentSpeed,
+            cadence: segmentCadence,
+            workoutType: workoutType,
+            weight: userWeightKg
+        ).calculate()
 
         let segment = CadenceSegment(
             timestamp: timestamp,
@@ -581,9 +588,8 @@ final class RideSessionManager: ObservableObject {
             samples.append(sample)
         }
         
-        let basalCalories = self.totalCalories - self.activeCalories
-        if basalCalories > 0 {
-            let quantity = HKQuantity(unit: .kilocalorie(), doubleValue: basalCalories)
+        if self.basalCalories > 0 {
+            let quantity = HKQuantity(unit: .kilocalorie(), doubleValue: self.basalCalories)
             let sample = HKQuantitySample(type: HKQuantityType(.basalEnergyBurned), quantity: quantity, start: startDate, end: endDate)
             samples.append(sample)
         }
@@ -666,6 +672,8 @@ final class RideSessionManager: ObservableObject {
         self.totalDistance = 0.0
         self.elevationGain = 0.0
         self.activeCalories = 0.0
+        self.basalCalories = 0.0
+        self.maxSpeed = nil
         self.averageCadence = nil
         self.averageSpeed = nil
         self.gyroXHistory.removeAll()

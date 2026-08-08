@@ -16,22 +16,47 @@ import Foundation
 /// boundary rather than an arbitrary tick.
 enum CadenceChartAxis {
 
-    /// Roughly how many gridlines to aim for before widening the spacing.
-    private static let targetMarkCount = 6.0
+    /// Gridlines strictly between the start and the end of the workout.
+    private static let maxIntermediateMarks = 4
 
-    /// The narrowest spacing that keeps the mark count near `targetMarkCount`,
-    /// from one segment (5.12s) doubling to at most one section (81.92s).
+    /// One FFT section is the narrowest spacing allowed — a workout shorter
+    /// than that gets no intermediate line at all. Above it, readable clock
+    /// intervals, since a section multiple like 12:17 is a boundary that means
+    /// something to the analysis but nothing to the reader.
+    private static let candidates: [TimeInterval] = [
+        MotionManager.SECTION_DURATION,   // 81.92s
+        120, 300, 600, 900, 1200, 1800, 2700, 3600, 5400, 7200
+    ]
+
+    /// Below ten minutes the zero-cadence markers read as individual stops;
+    /// beyond it they merge into a solid band along the axis and say nothing.
+    static let zeroMarkerMaxDuration: TimeInterval = 600
+
     static func stride(forDuration duration: TimeInterval) -> TimeInterval {
-        var spacing = MotionManager.SEGMENT_DURATION
-        while spacing < MotionManager.SECTION_DURATION && duration / spacing > targetMarkCount {
-            spacing *= 2
+        if let fit = candidates.first(where: { intermediateMarkCount(stride: $0, duration: duration) <= maxIntermediateMarks }) {
+            return fit
         }
-        return min(spacing, MotionManager.SECTION_DURATION)
+        // Longer than the ladder covers: divide instead, rounded up to a whole
+        // minute so the labels stay tidy.
+        return (duration / Double(maxIntermediateMarks + 1) / 60).rounded(.up) * 60
     }
 
+    /// How close to the end a mark may sit, as a fraction of the stride. A ride
+    /// lasting almost exactly a whole number of strides would otherwise draw an
+    /// unlabelled line flush against the right edge.
+    private static let endMargin = 0.15
+
     static func gridValues(forDuration duration: TimeInterval) -> [TimeInterval] {
+        guard duration > 0 else { return [0] }
         let spacing = stride(forDuration: duration)
-        // A workout shorter than one segment still deserves an axis.
-        return Array(Swift.stride(from: 0, through: max(duration, spacing), by: spacing))
+        return Array(Swift.stride(from: 0, to: duration - spacing * endMargin, by: spacing))
+    }
+
+    static func showsZeroMarkers(forDuration duration: TimeInterval) -> Bool {
+        duration <= zeroMarkerMaxDuration
+    }
+
+    private static func intermediateMarkCount(stride: TimeInterval, duration: TimeInterval) -> Int {
+        max(Int((duration / stride).rounded(.up)) - 1, 0)
     }
 }
